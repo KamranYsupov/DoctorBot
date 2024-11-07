@@ -1,0 +1,56 @@
+version: '3.8'
+
+x-function: &python
+  build:
+      context: .
+      dockerfile: app.dockerfile
+  volumes:
+    - ./bot:/bot:rw
+    - ./web:/web:rw
+    - poetry-volume:/opt/poetry:delegated
+  environment: &env-vars
+    POETRY_HOME: /opt/poetry
+  networks:
+    - internal
+  depends_on:
+    - app_db
+  env_file:
+    .env
+
+services:
+
+  app_db:
+    container_name: ${PROJECT_NAME}_db
+    image: postgres:11
+    volumes:
+      - app_db-template:/var/lib/postgresql/data/pgdata:rw
+    env_file:
+      - .env
+    networks:
+      - internal
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+  web:
+    <<: *python
+    container_name: ${PROJECT_NAME}_web
+    command: >
+      sh -c "python web.manage.py runserver"
+
+  bot:
+    <<: *python
+    container_name: ${PROJECT_NAME}_bot
+    command: >
+      sh -c "python bot.main.py"
+
+volumes:
+  app_db-template:
+  poetry-volume:
+
+networks:
+  internal:
