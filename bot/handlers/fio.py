@@ -43,7 +43,7 @@ async def process_fio(message: types.Message, state: FSMContext):
         username=message.from_user.username,
         fio=fio
     )
-    await Doctor.objects.create(**doctor_create_schema.model_dump())
+    await Doctor.objects.acreate(**doctor_create_schema.model_dump())
     await message.answer(
         'Регистрация прошла успешно! Выберите действие.',
         reply_markup=get_reply_keyboard(

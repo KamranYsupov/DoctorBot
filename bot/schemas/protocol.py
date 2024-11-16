@@ -1,5 +1,5 @@
 from typing import Optional, List
-from datetime import time 
+from datetime import date, time 
 
 from pydantic import BaseModel, Field
 
@@ -11,7 +11,7 @@ from web.doctors.models import Doctor
 class ProtocolBaseSchema(BaseModel):
     patient_name: str
     drugs: List[str]
-    first_take: str
+    first_take: date
     period: int
     time_to_take: time
     

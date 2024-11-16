@@ -1,4 +1,5 @@
-from datetime import time
+import calendar
+from datetime import datetime, date, time
 
 import loguru
 from aiogram import types, F, Router
@@ -83,8 +84,25 @@ async def process_drug_name(message: types.Message, state: FSMContext):
 
 @router.message(ProtocolState.first_take, F.text)
 async def process_first_take(message: types.Message, state: FSMContext):
-    await state.update_data(first_take=message.text)
-    await message.answer('Сколько дней нужно принемать лекарства?') 
+    now = datetime.now()
+    year = now.year
+    month = now.month
+    day = get_integer_from_string(message.text)
+    
+    days_count = calendar.monthrange(year, month)[1]
+    
+    if not day or day > days_count:
+        return await message.answer('Выберите число текущего месяца')
+    if day < now.day:
+        return await message.answer('Нельзя выбирать прошедшие числа')
+    
+    first_take = date(year, month, day)
+    
+    await state.update_data(first_take=first_take)
+    await message.answer(
+        'Сколько дней нужно принемать лекарства?',
+        reply_markup=reply_cancel_keyboard
+    ) 
     await state.set_state(ProtocolState.period)
     
     
@@ -125,23 +143,27 @@ async def process_time_to_take(message: types.Message, state: FSMContext):
 @router.callback_query(F.data == 'create_protocol')
 async def create_protocol_handler(callback: types.CallbackQuery, state: FSMContext):
     protocol_data = await state.get_data()
-    doctor = await Doctor.objects.get(telegram_id=callback.from_user.id)
+    doctor = await Doctor.objects.aget(telegram_id=callback.from_user.id)
     protocol_data['doctor_id'] = doctor.id
     
     protocol_create_schema = ProtocolCreateSchema(**protocol_data)
-    protocol = await Protocol.objects.create(**protocol_create_schema.model_dump())
+    protocol = await Protocol.objects.acreate(**protocol_create_schema.model_dump())
     
     await callback.message.delete()
     await callback.message.answer_photo(
         photo=f'{config.QR_CODE_API_GENERATOR_URL}{config.BOT_LINK}?start={protocol.id}',
         caption='Протокол создан! <b>QR-код</b>:',
-        parse_mode='HTML'
+        parse_mode='HTML',
+        reply_markup=get_reply_keyboard(
+            buttons=('Меню 📁', 'Старт нового протокола 📝')
+        )
     )
     await state.clear()
     
     
 @router.callback_query(F.data == 'add_drug')
 async def add_drug_handler(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.delete()
     await callback.message.answer('Введите название препарата') 
     await state.set_state(ProtocolState.drugs)
     
