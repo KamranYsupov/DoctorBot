@@ -10,6 +10,7 @@ from .fio import DoctorState
 from schemas.patient import PatientCreateSchema
 from keyboards.reply import get_reply_keyboard, reply_cancel_keyboard
 from orm.patient import get_or_create_patient_and_update_protocol
+from orm.telegram_user import get_doctor_or_patient
 from web.protocols.models import Protocol
 from web.patients.models import Patient
 from web.doctors.models import Doctor
@@ -23,23 +24,31 @@ async def start_command_handler(
     command: CommandObject,
     state: FSMContext,
 ):
-    message_text = (
-        f'Привет, {message.from_user.first_name}.'
-    )
-     
-    try:
-        doctor = await Doctor.objects.aget(telegram_id=message.from_user.id)
+    
+    telegram_user = await get_doctor_or_patient(telegram_id=message.from_user.id)
+    message_text = 'Вы уже зарегистрированы. Выберите действие.'
+    
+    if not telegram_user:
+        pass
+    elif isinstance(telegram_user, Doctor):
         await message.answer(
-            'Вы уже зарегистрированы. Выберите действие.',
+            message_text,
             reply_markup=get_reply_keyboard(
                 buttons=('Меню 📁', 'Старт нового протокола 📝')
             )
         )
         return
-        
-    except ObjectDoesNotExist:
-        pass
-       
+    elif isinstance(telegram_user, Patient):
+        await message.answer(
+            message_text,
+            reply_markup=get_reply_keyboard(
+                buttons=('Меню 📁',)
+            )
+        )
+        return
+    
+    message_text = f'Привет, {message.from_user.first_name}.'
+
     if not command.args:
         message_text += '\nОтправь свое ФИО одним сообщением'
         
@@ -68,7 +77,7 @@ async def start_command_handler(
         protocol, 
         patient_create_schema
     )
-        
+            
     await message.answer(
         'Протокол успешно добавлен! Выберите действие.',
         reply_markup=get_reply_keyboard(buttons=('Меню 📁', ))

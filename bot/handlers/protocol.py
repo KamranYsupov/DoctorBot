@@ -1,5 +1,5 @@
 import calendar
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 
 import loguru
 from aiogram import types, F, Router
@@ -7,6 +7,7 @@ from aiogram.filters import StateFilter, Command, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from asgiref.sync import sync_to_async
+from django.utils import timezone
 
 from core import config
 from keyboards.inline import get_inline_keyboard
@@ -19,6 +20,7 @@ from keyboards.reply import (
 from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
 from utils.validators import get_integer_from_string
+from utils.protocol import get_timedelta_calendar
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
 
@@ -84,7 +86,7 @@ async def process_drug_name(message: types.Message, state: FSMContext):
 
 @router.message(ProtocolState.first_take, F.text)
 async def process_first_take(message: types.Message, state: FSMContext):
-    now = datetime.now()
+    now = timezone.now()
     year = now.year
     month = now.month
     day = get_integer_from_string(message.text)
@@ -95,6 +97,8 @@ async def process_first_take(message: types.Message, state: FSMContext):
         return await message.answer('Выберите число текущего месяца')
     if day < now.day:
         return await message.answer('Нельзя выбирать прошедшие числа')
+    #if day == now.day:
+    #    return await message.answer('Нельзя выбирать текущую дату')
     
     first_take = date(year, month, day)
     
@@ -145,6 +149,13 @@ async def create_protocol_handler(callback: types.CallbackQuery, state: FSMConte
     protocol_data = await state.get_data()
     doctor = await Doctor.objects.aget(telegram_id=callback.from_user.id)
     protocol_data['doctor_id'] = doctor.id
+    first_take = protocol_data['first_take']
+    period = protocol_data['period']
+    
+    timedelta_calendar = get_timedelta_calendar(first_take, period)
+    protocol_data['reception_calendar'] = timedelta_calendar
+    protocol_data['notificatons_calendar'] = timedelta_calendar
+    protocol_data['last_take'] = first_take + timedelta(days=period)
     
     protocol_create_schema = ProtocolCreateSchema(**protocol_data)
     protocol = await Protocol.objects.acreate(**protocol_create_schema.model_dump())
@@ -183,3 +194,18 @@ async def send_finish_protocol_message(
         ),
         parse_mode=parse_mode
     )
+   
+    
+@router.callback_query(F.data.startswith('complete_protocol_'))
+async def complete_protocol(callback: types.CallbackQuery):
+    protocol_id = int(callback.data.split('_')[-1])
+    now = timezone.now()
+    current_date = now.date()
+    
+    protocol = await Protocol.objects.aget(id=protocol_id)
+    protocol.reception_calendar.update({current_date.strftime('%d.%m.%Y'): True})
+    await sync_to_async(protocol.save)()
+    
+    await callback.message.edit_text('Прием выполнен ✅')
+    
+    

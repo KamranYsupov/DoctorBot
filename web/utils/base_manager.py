@@ -1,3 +1,5 @@
+from typing import Sequence, List, Dict
+
 from django.db import models
 from asgiref.sync import sync_to_async
 
@@ -13,13 +15,31 @@ class AsyncBaseManager(models.Manager):
         return super().create(**kwargs)
     
     @sync_to_async
-    def a_all(self):
-        return super().all()
+    def a_all(
+        self,
+        select_relations: Sequence[str] = [],
+        prefetch_relations: Sequence[str] = [],
+    ) -> List:
+        return list(
+            super()
+            .select_related(*select_relations)
+            .prefetch_related(*prefetch_relations)
+        )
+    
+    @sync_to_async(thread_sensitive=True)
+    def afilter(
+        self,
+        select_relations: Sequence[str] = [],
+        prefetch_relations: Sequence[str] = [],
+        **kwargs
+    ) -> List:
+        return list(
+            super()
+            .filter(**kwargs)
+            .select_related(*select_relations)
+            .prefetch_related(*prefetch_relations)
+        )
     
     @sync_to_async
-    def afilter(self, *args, **kwargs):
-        return super().filter(*args, **kwargs)
-    
-    @sync_to_async
-    def aget_or_create(self, defaults: dict = {}, **kwargs):
+    def aget_or_create(self, defaults: Dict = {}, **kwargs):
         return get_or_create().get_or_create(defaults, **kwargs)

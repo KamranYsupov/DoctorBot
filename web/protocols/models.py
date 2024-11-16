@@ -12,11 +12,23 @@ class Protocol(models.Model):
         auto_now=False,
         auto_now_add=False
     )
-    period = models.IntegerField(_('Число дней приема'))
+    last_take = models.DateField(
+        _('День последнего приема'),
+        auto_now=False,
+        auto_now_add=False
+    )
     time_to_take = models.TimeField(
         _('Время приема'),
         auto_now=False,
         auto_now_add=False
+    )
+    reception_calendar = models.JSONField(
+        _('Календарь према препаратов'),
+        default=dict()
+    )
+    notifications_calendar = models.JSONField(
+        _('Календарь для проверки отправки уведомлений'),
+        default=dict()
     )
     
     doctor = models.ForeignKey(
@@ -42,3 +54,9 @@ class Protocol(models.Model):
 
     def __str__(self):
         return self.patient_name
+    
+    @property
+    def period(self) -> int:
+        delta = self.last_take - self.first_take
+        
+        return delta.days
