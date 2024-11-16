@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from web.utils.base_manager import AsyncBaseManager
+
 
 class Protocol(models.Model):
     drugs = models.JSONField(_('Список препаратов'), default=list())
@@ -31,6 +33,8 @@ class Protocol(models.Model):
         null=True,
         default=None,
     )
+    
+    objects = AsyncBaseManager()
 
     class Meta:
         verbose_name = _('Протокол')

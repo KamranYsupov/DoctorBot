@@ -8,20 +8,19 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from dotenv import load_dotenv
 
-from handlers.routing import get_main_router
-from core.container import Container
-from core.config import settings
-
 
 async def main():
     """Запуск бота"""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
-
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.core.settings')
+  
     django.setup()
     
     load_dotenv()
+    
+    from handlers.routing import get_main_router
+    from core import config
 
-    bot = Bot(token=settings.bot_token, default=DefaultBotProperties())
+    bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties())
 
     dp = Dispatcher()
     dp.include_router(get_main_router())

@@ -43,9 +43,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     # Приложения
-    'apps.doctors.apps.DoctorsConfig',
-    'apps.patients.apps.PatientsConfig',
-    'apps.protocols.apps.ProtocolsConfig',
+    'web.doctors',
+    'web.patients',
+    'web.protocols',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +58,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'core.urls'
+ROOT_URLCONF = 'web.core.urls'
 
 TEMPLATES = [
     {
@@ -76,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+WSGI_APPLICATION = 'web.core.wsgi.application'
 
 
 # Database
