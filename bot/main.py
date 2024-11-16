@@ -15,7 +15,7 @@ from core.config import settings
 
 async def main():
     """Запуск бота"""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'doctor.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
     django.setup()
     
