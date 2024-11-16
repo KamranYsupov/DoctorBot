@@ -35,7 +35,7 @@ async def start_command_handler(
                 username=message.from_user.username,
                 name=protocol.patient_name,
             )
-            patient = await Patient.objects.create(patient_create_schema.model_dump())
+            patient = await Patient.objects.create(**patient_create_schema.model_dump())
             protocol.patient = patient
             await sync_to_async(protocol.save())
         
