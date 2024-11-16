@@ -7,7 +7,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .fio import DoctorState
 from schemas.patient import PatientCreateSchema
-from keyboards.reply import get_reply_keyboard
+from keyboards.reply import get_reply_keyboard, reply_cancel_keyboard
 from web.protocols.models import Protocol
 from web.patients.models import Patient
 from web.doctors.models import Doctor
@@ -62,7 +62,7 @@ async def start_command_handler(
     except ObjectDoesNotExist:
         await message.answer(
             message_text, 
-            reply_markup=get_reply_keyboard(buttons=('Отмена ❌', ))
+            reply_markup=reply_cancel_keyboard
     )
         await state.set_state(DoctorState.fio)
         

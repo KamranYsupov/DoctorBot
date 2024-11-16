@@ -19,7 +19,7 @@ class DoctorState(StatesGroup):
 
 @router.message(
     StateFilter('*'),
-    or_f(Command('cancel'), (F.text.lower() == '.'))
+    or_f(Command('cancel'), (F.text.lower() == 'отмена ❌'))
 )
 async def cancel_handler(
         message: types.Message,
