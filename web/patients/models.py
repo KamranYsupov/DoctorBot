@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from utils.model_mixins import AbstractTelegramUser
+from web.utils.model_mixins import AbstractTelegramUser
 
 
 class Patient(AbstractTelegramUser):
