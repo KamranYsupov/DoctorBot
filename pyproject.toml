@@ -13,6 +13,7 @@ loguru = "^0.7.2"
 python-dotenv = "^1.0.1"
 dependency-injector = "^4.43.0"
 pydantic = "^2.9.2"
+aiohttp = "3.9"
 
 
 [build-system]
