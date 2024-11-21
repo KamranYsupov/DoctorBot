@@ -112,7 +112,7 @@ services:
       dockerfile: web.dockerfile
     hostname: flower
     entrypoint: celery
-    command: -A kamranproject flower -P gevent
+    command: -A web.core.celery flower -P gevent
     links:
       - redis
     ports:
