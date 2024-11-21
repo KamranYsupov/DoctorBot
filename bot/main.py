@@ -12,11 +12,11 @@ from dotenv import load_dotenv
 async def main():
     """Запуск бота"""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.core.settings')
-  
+
     django.setup()
-    
+
     load_dotenv()
-    
+
     from handlers.routing import get_main_router
     from core import config
 

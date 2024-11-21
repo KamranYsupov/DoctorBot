@@ -12,5 +12,3 @@ RUN pip install --upgrade pip && \
     poetry install --no-root --no-dev
 
 COPY . .
-
-CMD ['python' 'bot/main.py']

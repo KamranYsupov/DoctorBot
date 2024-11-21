@@ -6,6 +6,7 @@ x-function: &base_python
     - poetry-volume:/poetry:delegated
   environment: &env-vars
     POETRY_HOME: /poetry
+    PYTHONPATH: /app
     DB_HOST: ${DB_HOST}
     DB_NAME: ${DB_NAME}
     DB_USER: ${DB_USER}
@@ -36,8 +37,6 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: trust
       PGDATA: /var/lib/postgresql/data/pgdata
-    env_file:
-      - .env
 
   nginx:
     build: ./nginx
@@ -68,6 +67,7 @@ services:
       context: .
       dockerfile: bot.dockerfile
     container_name: ${PROJECT_NAME}_bot
+    command: python bot/main.py
 
   redis:
     image: redis:7.0.11-alpine
