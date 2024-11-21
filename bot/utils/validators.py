@@ -64,14 +64,14 @@ async def valdate_time_to_take_from_message(
         return
     
     now = timezone.now()
-    print(first_take)
-    print(now.date())
-    print((now + timedelta(minutes=30)).time())
-    print(time_to_take)
-    if first_take != now.date():
-        return time_to_take
-    
-    if (now + timedelta(minutes=30)).time() > time_to_take:
+    datetime_to_take = timezone.make_aware(
+        timezone.datetime.combine(
+            now.date(),
+            time_to_take
+        )
+    )
+
+    if now + timedelta(minutes=30) > datetime_to_take:
         await message.answer(
             'Время приёма должно быть позже 30 минут относительно текущего времени'
         )

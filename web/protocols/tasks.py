@@ -84,14 +84,14 @@ def notify_doctor_about_drug_take_miss(protocol_id: int):
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
     
-    time_to_take = timezone.make_aware(
+    datetime_to_take = timezone.make_aware(
         timezone.datetime.combine(
             now.date(),
             protocol.time_to_take
         )
     )
 
-    if now > time_to_take + timedelta(
+    if now > datetime_to_take + timedelta(
         minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
     ) and not protocol.reception_calendar.get(current_date_strformat):
         text = (
@@ -133,7 +133,7 @@ def set_notifications():
     ]
             
     for protocol in unnotificated_protocols:
-        time_to_take = timezone.make_aware(
+        datetime_to_take = timezone.make_aware(
             timezone.datetime.combine(
                 now.date(),
                 protocol.time_to_take
@@ -141,7 +141,7 @@ def set_notifications():
         )
         
         for minutes_before in settings.SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE:
-            notification_time = time_to_take - timedelta(minutes=minutes_before)
+            notification_time = datetime_to_take - timedelta(minutes=minutes_before)
             if now > notification_time:
                 continue
             
@@ -152,7 +152,7 @@ def set_notifications():
             )
         
         for i in range(1, settings.REMNDERS_COUNT_AFTER_TIME_TO_TAKE+1):  # 3 напоминания по 5 минут каждая
-            reminder_time = time_to_take + timedelta(
+            reminder_time = datetime_to_take + timedelta(
                 minutes=i * settings.SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE
             ) 
             
