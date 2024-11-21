@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('telegram_id', models.BigIntegerField(db_index=True, unique=True, verbose_name='Телеграм ID')),
-                ('username', models.CharField(db_index=True, max_length=70, unique=True, verbose_name='Имя пользователя')),
+                ('username', models.CharField(db_index=True, max_length=70, unique=True, null=True, verbose_name='Имя пользователя')),
                 ('fio', models.CharField(max_length=150, verbose_name='ФИО')),
             ],
             options={

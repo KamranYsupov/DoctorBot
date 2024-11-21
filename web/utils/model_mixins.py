@@ -15,6 +15,7 @@ class AbstractTelegramUser(models.Model):
         max_length=70,
         unique=True,
         db_index=True,
+        null=True,
     )
     
     objects = AsyncBaseManager()

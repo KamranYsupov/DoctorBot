@@ -6,16 +6,18 @@ from asgiref.sync import sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
 
-from .fio import DoctorState
+from .state import DoctorState, PatientState
 from schemas.patient import PatientCreateSchema
 from keyboards.reply import (
     reply_cancel_keyboard,
     get_reply_keyboard,
     reply_patient_keyboard,
-    reply_doctor_keyboard
+    reply_doctor_keyboard,
+    get_reply_contact_keyboard
 )
 from orm.patient import get_or_create_patient_and_update_protocol
 from orm.telegram_user import get_doctor_or_patient
+from utils.patient import register_patient_or_add_protocol
 from web.protocols.models import Protocol
 from web.patients.models import Patient
 from web.doctors.models import Doctor
@@ -69,20 +71,31 @@ async def start_command_handler(
         await message.answer('Неправильный QR-код')
         return 
         
-    patient_create_schema = PatientCreateSchema(
-        telegram_id=message.from_user.id,
-        username=message.from_user.username,
-        name=protocol.patient_name
-    )
-    await get_or_create_patient_and_update_protocol(
-        protocol, 
-        patient_create_schema
-    )
-            
+    
+    
+    if isinstance(telegram_user, Patient):
+        await register_patient_or_add_protocol(
+            message=message,
+            protocol=protocol,
+            phone_number=telegram_user.phone_number
+        )
+        return
+    
+    button_text = 'Отправить номер телефона 📲'
     await message.answer(
-        'Протокол успешно добавлен! Выберите действие.',
-        reply_markup=reply_patient_keyboard
+        'Протокол найден ✅.\nДля завершения регистрации '
+        f'нажми на кнопу <b><em>"{button_text}"</em></b>, '
+        'чтобы его отправить.\n\n'
+        'На него будет приходить вызов во время приёма лекарств',
+        reply_markup=get_reply_contact_keyboard(button_text),
+        parse_mode='HTML',
     )
+    await state.update_data(protocol_id=protocol.id)
+    await state.set_state(PatientState.phone_number)
+    
+    
+    
+    
 
     
     

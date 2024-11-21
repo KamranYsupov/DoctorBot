@@ -64,9 +64,21 @@ def get_reply_calendar_keyboard():
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
+def get_reply_contact_keyboard(
+    text: str = 'Отправить номер телефона 📲'
+) -> ReplyKeyboardMarkup:
+    keyboard = [
+        [KeyboardButton(text=text, request_contact=True)],
+        [KeyboardButton(text='Отмена ❌')]
+    ]
+    
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+    
+    
 reply_cancel_keyboard = get_reply_keyboard(buttons=('Отмена ❌',))
 reply_keyboard_remove = ReplyKeyboardRemove()
 reply_calendar_keyboard = get_reply_calendar_keyboard()
+reply_contact_keyboard = get_reply_contact_keyboard()
 reply_menu_keyboard = get_reply_keyboard(
     buttons=(
         'Протоколы 🗂️',

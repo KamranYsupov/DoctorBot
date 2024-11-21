@@ -12,14 +12,20 @@ from web.utils.telegram_service import (
     telegram_service,
     send_message_until_success,
 )
+from web.utils.smsc_service import smsc_service
 
 
 @shared_task(ignore_result=True)
-def send_reminder_before_time_to_take(protocol_id: int, minutes_before: int):
+def send_reminder_before_time_to_take(
+    protocol_id: int, 
+    minutes_before: int,
+    add_complite_take_button: bool = False
+):
     """
     Задача для уведомления пациента о скором приёме препаратов протокола
     """
     protocol = Protocol.objects.get(id=protocol_id)
+    reply_markup = None
     
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
@@ -34,14 +40,15 @@ def send_reminder_before_time_to_take(protocol_id: int, minutes_before: int):
     text = f'Осталось <b>{minutes_before} минут</b>'\
     f' до приема лекарств: <em>{drugs_string}</em>'
     
-    inline_keyboard = [[
-        {
-            'text': 'Выполнено ✅',
-            'callback_data': f'complete_protocol_{protocol_id}'
-        }
-    ]]
+    if add_complite_take_button:
+        inline_keyboard = [[
+            {
+                'text': 'Выполнено ✅',
+                'callback_data': f'complete_protocol_{protocol_id}'
+            }
+        ]]
     
-    reply_markup = {'inline_keyboard': inline_keyboard}
+        reply_markup = {'inline_keyboard': inline_keyboard}
 
     return send_message_until_success(
         chat_id=telegram_id,
@@ -146,8 +153,13 @@ def set_notifications():
                 continue
             
             eta = now + timedelta(seconds=(notification_time - now).total_seconds())
+            send_reminder_kwargs = {'protocol_id': protocol.id, 'minutes_before': minutes_before}
+            
+            if minutes_before == settings.SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE[-1]:
+                send_reminder_kwargs['add_complite_take_button'] = True
+                
             send_reminder_before_time_to_take.apply_async(
-                args=(protocol.id, minutes_before),
+                kwargs=send_reminder_kwargs,
                 eta=eta
             )
         
