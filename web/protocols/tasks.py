@@ -127,11 +127,10 @@ def set_notifications():
         patient__isnull=False,
     ).select_related('doctor', 'patient')
     
-    unnotificated_protocols = []
-
-    for protocol in current_protocols:
+    unnotificated_protocols = [
+        protocol for protocol in current_protocols
         if protocol.notifications_calendar.get(current_date_strformat) == False:
-            unnotificated_protocols.append(protocol)
+    ]
             
     for protocol in unnotificated_protocols:
         time_to_take = timezone.make_aware(
