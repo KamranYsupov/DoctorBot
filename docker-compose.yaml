@@ -1,10 +1,11 @@
-version: '3.8'
+version: '3.3'
 
 x-function: &base_backend
   build:
     context: .
     dockerfile: app.dockerfile
   volumes:
+    - ./:/DoctorBot
     - poetry-volume:/opt/poetry:delegated
   environment: &env-vars
     POETRY_HOME: /opt/poetry
@@ -19,11 +20,9 @@ x-function: &base_backend
   env_file:
     - .env
 
-y-function: &base_celery
+x-function: &base_celery
   <<: *base_backend
   entrypoint: celery
-  volumes:
-    - ./:/
   links:
     - redis
   depends_on:
@@ -51,26 +50,33 @@ services:
   web:
     <<: *base_backend
     container_name: ${PROJECT_NAME}_web
-    volumes:
-      - ./web:/web:rw
-    entrypoint: python
     command: >
-      manage.py migrate --noinput &&
-      manage.py runserver
+      sh -c "python manage.py migrate && gunicorn app.wsgi:application --bind 0.0.0.0:8000"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/site.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - internal
+    depends_on:
+      - web
 
   bot:
     <<: *base_backend
     container_name: ${PROJECT_NAME}_bot
-    volumes:
-      - ./bot:/bot:rw
     command: >
-      sh -c "python bot.main.py"
+      sh -c "python bot/main.py"
 
   redis:
     image: redis:7.0.11-alpine
     hostname: redis
     ports:
-      - '6379:6379'
+      - "6379:6379"
+    networks:
+      - internal
 
   worker:
     <<: *base_celery
@@ -84,13 +90,6 @@ services:
     command: >
       -A web.core.celery beat -l debug
 
-  flower:
-    <<: *base_celery
-    hostname: flower
-    command: >
-      -A web.core.celery flower -P gevent
-    ports:
-      - '5555:5555'
 
 volumes:
   app_db-template:
@@ -98,3 +97,4 @@ volumes:
 
 networks:
   internal:
+
