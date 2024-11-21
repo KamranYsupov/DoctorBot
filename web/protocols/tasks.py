@@ -107,11 +107,12 @@ def notify_doctor_about_drug_take_miss(protocol_id: int):
             }
         ]]
     
-    reply_markup = {'inline_keyboard': inline_keyboard}
+        reply_markup = {'inline_keyboard': inline_keyboard}
         
         return send_message_until_success(
             chat_id=protocol.doctor.telegram_id,
             text=text,
+            reply_markup=reply_markup
         )
     
 
