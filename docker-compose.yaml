@@ -43,10 +43,10 @@ services:
     container_name: ${PROJECT_NAME}_web
     volumes:
     - ./web:/web:rw
+    entrypoint: python
     command: >
-      sh -c "
-      python manage.py migrate --noinput
-      python manage.py runserver"
+      manage.py migrate --noinput
+      manage.py runserver
 
   bot:
     <<: *python
@@ -67,9 +67,21 @@ services:
     entrypoint: celery
     volumes:
       - ./:/
-
     command: >
        -A web.core.celery worker -l info -P gevent
+    links:
+      - redis
+    depends_on:
+      - app_db
+      - redis
+
+  beat:
+    hostname: worker
+    entrypoint: celery
+    volumes:
+      - ./:/
+    command: >
+       -A web.core.celery beat -l debug 
     links:
       - redis
     depends_on:
