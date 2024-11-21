@@ -16,11 +16,19 @@ from web.utils.telegram_service import (
 
 @shared_task(ignore_result=True)
 def send_reminder_before_time_to_take(protocol_id: int, minutes_before: int):
+    """
+    Задача для уведомления пациента о скором приёме препаратов протокола
+    """
     protocol = Protocol.objects.get(id=protocol_id)
-    telegram_id = protocol.patient.telegram_id
+    
+    now = timezone.now()
+    current_date_strformat = now.strftime('%d.%m.%Y')
     
     if protocol.reception_calendar.get(current_date_strformat):
         return 
+    
+    telegram_id = protocol.patient.telegram_id
+    
     
     drugs_string = ', '.join(protocol.drugs)
     text = f'Осталось <b>{minutes_before} минут</b>'\
@@ -44,6 +52,10 @@ def send_reminder_before_time_to_take(protocol_id: int, minutes_before: int):
     
 @shared_task(ignore_result=True)
 def send_reminder_after_time_to_take(protocol_id: int):
+    """
+    Задача для уведомления пациента о приёме препаратов протокола
+    """
+    
     protocol = Protocol.objects.get(id=protocol_id)
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
@@ -55,13 +67,52 @@ def send_reminder_after_time_to_take(protocol_id: int):
     
     drugs_string = ', '.join(protocol.drugs)
     text = f'Напоминаем, что пора принять лекарства: {drugs_string}'
-    
-    status_code = 0
-    
+        
     return send_message_until_success(
         chat_id=telegram_id,
         text=text,
     )
+    
+    
+@shared_task(ignore_result=True)
+def notify_doctor_about_drug_take_miss(protocol_id: int):
+    """
+    Задача для уведомления доктора о пропуске приёма препаратов протокола пациентом
+    """
+    
+    protocol = Protocol.objects.get(id=protocol_id)
+    now = timezone.now()
+    current_date_strformat = now.strftime('%d.%m.%Y')
+    
+    time_to_take = timezone.make_aware(
+        timezone.datetime.combine(
+            now.date(),
+            protocol.time_to_take
+        )
+    )
+
+    if now > time_to_take + timedelta(
+        minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
+    ) and not protocol.reception_calendar.get(current_date_strformat):
+        text = (
+            f'Пациент {protocol.patient_name} '
+            'пропустил прием препаратов по протоколу' 
+            f'ID: {protocol.id} | {protocol.patient_name}'
+        )
+        
+        inline_keyboard = [[
+            {
+                'text': 'Постотреть протокол 🔎',
+                'callback_data': f'protocol_1_{protocol_id}'
+            }
+        ]]
+    
+    reply_markup = {'inline_keyboard': inline_keyboard}
+        
+        return send_message_until_success(
+            chat_id=protocol.doctor.telegram_id,
+            text=text,
+        )
     
 
 @shared_task(ignore_result=True)
@@ -100,15 +151,23 @@ def set_notifications():
                 eta=eta
             )
         
-        for i in range(1, 7):  # 6 напоминаний по 5 минут каждая
+        for i in range(1, settings.REMNDERS_COUNT_AFTER_TIME_TO_TAKE+1):  # 3 напоминания по 5 минут каждая
             reminder_time = time_to_take + timedelta(
                 minutes=i * settings.SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE
             ) 
+            
             eta = now + timedelta(seconds=(reminder_time - now).total_seconds())
             send_reminder_after_time_to_take.apply_async(
                 args=(protocol.id,),
                 eta=eta
             )
+            
+            if i == 6:
+                eta += timedelta(seconds=30)
+                notify_doctor_about_drug_take_miss.apply_async(
+                    args=(protocol.id,),
+                    eta=eta
+                )
             
         protocol.notifications_calendar[current_date_strformat] = True
     

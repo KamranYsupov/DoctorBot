@@ -43,6 +43,7 @@ class ProtocolAdmin(admin.ModelAdmin):
     def get_exclude(self, request, obj=None):
         # Если объект уже существует (редактирование), то исключаем поля field1 и field3
         if obj:
-            return self.excluded_fields
+            pass
+            #return self.excluded_fields
         return ()
 

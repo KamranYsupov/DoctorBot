@@ -9,6 +9,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.exceptions import TelegramBadRequest
 from asgiref.sync import sync_to_async
 from django.utils import timezone
+from django.conf import settings
 
 from core import config
 from keyboards.inline import get_inline_keyboard
@@ -188,7 +189,22 @@ async def complete_protocol(callback: types.CallbackQuery):
     current_date_strformat = now.strftime('%d.%m.%Y')
     
     protocol = await Protocol.objects.aget(id=protocol_id)
-    if not protocol.reception_calendar.get(current_date_strformat):
+    drugs_taken = protocol.reception_calendar.get(current_date_strformat)
+    
+    time_to_take = timezone.make_aware(
+        timezone.datetime.combine(
+            now.date(),
+            protocol.time_to_take
+        )
+    )
+        
+    if now > time_to_take + timedelta(
+        minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
+    ) and not drugs_taken:
+        await callback.message.edit_text('Вы пропустили приём.')
+        return 
+    
+    if not drugs_taken:
         protocol.reception_calendar.update({current_date_strformat: True})
         await sync_to_async(protocol.save)()
     

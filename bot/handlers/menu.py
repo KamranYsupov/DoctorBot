@@ -214,18 +214,24 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
     protocol_id = int(callback_data[-1])
     page_number = int(callback_data[-2])
+    reply_markup = None
     
     protocol = await Protocol.objects.aget(id=protocol_id)
-    message_text = get_protocol_info_message(protocol)
+    telegram_user = await get_doctor_or_patient(callback.from_user.id)
     
-    await callback.message.edit_text(
-        message_text,
-        reply_markup=get_inline_keyboard(
+    if isinstance(telegram_user, Doctor):
+        reply_markup = get_inline_keyboard(
             buttons={
                 'Редактировать 📝': f'edit_protocol_{protocol.id}_{page_number}',
                 'Назад 🔙': f'doctor_protocols_{protocol.patient_name}_{page_number}'
             }        
-        ),
+        )
+    
+    message_text = get_protocol_info_message(protocol)
+    
+    await callback.message.edit_text(
+        message_text,
+        reply_markup=reply_markup,
         parse_mode='HTML'
     )
     

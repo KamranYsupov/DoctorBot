@@ -57,12 +57,15 @@ def send_message_until_success(
     status_code = 1
     
     while status_code != 200:
-        response = telegram_service.send_message(
+        try:
+            response = telegram_service.send_message(
             chat_id=chat_id,
             text=text,
             reply_markup=reply_markup,
             parse_mode=parse_mode
-        )
+            )
+        except requests.exceptions.ConnectTimeout:
+            continue
         
         status_code = response.status_code
     

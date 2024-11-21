@@ -31,7 +31,11 @@ from utils.validators import (
 from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
 from utils.validators import get_integer_from_string
-from utils.protocol import get_timedelta_calendar, get_protocol_from_state
+from utils.protocol import (
+    get_timedelta_calendar,
+    get_protocol_from_state,
+    send_edit_protocol_notification_to_patient
+)
 from utils.message import default_process_time_to_take_message
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
@@ -49,8 +53,8 @@ async def start_edit_drugs_handler(
     await state.update_data(protocol_id=protocol_id)
     await callback.message.delete()
     await callback.message.answer(
-        'Отправьте список препаратов одним сообщением через пробел\n\n'
-        '<b>Пример:</b> <b><em>Парацетамол Глицин Витамин Д</em></b>',
+        'Отправьте список препаратов одним сообщением через запятую\n\n'
+        '<b>Пример:</b> <b><em>Парацетамол,Глицин,Витамин Д</em></b>',
         reply_markup=reply_cancel_keyboard,
         parse_mode='HTML',
     )    
@@ -60,7 +64,7 @@ async def start_edit_drugs_handler(
     
 @router.message(EditProtocolState.drugs, F.text)
 async def process_drugs(message: types.Message, state: FSMContext):
-    drugs = message.text.split()
+    drugs = message.text.split(',')
 
     protocol = await get_protocol_from_state(state)
     protocol.drugs = drugs
@@ -73,6 +77,10 @@ async def process_drugs(message: types.Message, state: FSMContext):
     await message.answer(
         'Посмотреть протокол',
         reply_markup=get_protocol_inline_button_keyboard(protocol.id)
+    )
+    await send_edit_protocol_notification_to_patient(
+        bot=message.bot,
+        protocol=protocol
     )
     
     await state.clear()
@@ -113,6 +121,11 @@ async def process_first_take(message: types.Message, state: FSMContext):
         'Посмотреть протокол',
         reply_markup=get_protocol_inline_button_keyboard(protocol.id)
     )
+    await send_edit_protocol_notification_to_patient(
+        bot=message.bot,
+        protocol=protocol
+    )
+
     
     await state.clear()
     
@@ -153,6 +166,10 @@ async def process_edit_period(message: types.Message, state: FSMContext):
         'Посмотреть протокол',
         reply_markup=get_protocol_inline_button_keyboard(protocol.id)
     )
+    await send_edit_protocol_notification_to_patient(
+        bot=message.bot,
+        protocol=protocol
+    )
     
     await state.clear()
     
@@ -192,6 +209,10 @@ async def process_edit_time_to_take(message: types.Message, state: FSMContext):
     await message.answer(
         'Посмотреть протокол',
         reply_markup=get_protocol_inline_button_keyboard(protocol.id)
+    )
+    await send_edit_protocol_notification_to_patient(
+        bot=message.bot,
+        protocol=protocol
     )
     
     await state.clear()
