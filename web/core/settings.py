@@ -134,7 +134,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB_CELERY = os.environ.get('REDIS_DB_CELERY', 0)
 REDIS_DB_RESULT_CELERY = os.environ.get('REDIS_DB_RESULT_CELERY', 1)
