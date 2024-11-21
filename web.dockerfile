@@ -7,11 +7,11 @@ ENV UWSGI_THREADS 8
 ENV UWSGI_HARAKIRI 60
 ENV DJANGO_SETTINGS_MODULE 'web.core.settings'
 
-WORKDIR /opt/
+WORKDIR /
 
-COPY pyproject.toml pyproject.toml
-RUN mkdir -p /opt/src/static/ && \
-    mkdir -p /opt/src/media/  &&  \
+COPY ./pyproject.toml pyproject.toml
+RUN mkdir -p /web/static/ && \
+    mkdir -p /web/media/  &&  \
     pip install --upgrade pip && \
     pip install 'poetry>=1.4.2' && \
     poetry config virtualenvs.create false && \
