@@ -154,16 +154,18 @@ async def create_protocol_handler(callback: types.CallbackQuery, state: FSMConte
     
     timedelta_calendar = get_timedelta_calendar(first_take, period)
     protocol_data['reception_calendar'] = timedelta_calendar
-    protocol_data['notificatons_calendar'] = timedelta_calendar
+    protocol_data['notifications_calendar'] = timedelta_calendar
     protocol_data['last_take'] = first_take + timedelta(days=period)
     
     protocol_create_schema = ProtocolCreateSchema(**protocol_data)
     protocol = await Protocol.objects.acreate(**protocol_create_schema.model_dump())
+    protocol_start_link = f'{config.BOT_LINK}?start={protocol.id}'
     
     await callback.message.delete()
     await callback.message.answer_photo(
-        photo=f'{config.QR_CODE_API_GENERATOR_URL}{config.BOT_LINK}?start={protocol.id}',
-        caption='Протокол создан! <b>QR-код</b>:',
+        photo=f'{config.QR_CODE_API_GENERATOR_URL}{protocol_start_link}',
+        caption='Протокол создан! <b>QR-код</b>:\n'
+        f'Ссылка для пациента: {protocol_start_link}',
         parse_mode='HTML',
         reply_markup=get_reply_keyboard(
             buttons=('Меню 📁', 'Старт нового протокола 📝')

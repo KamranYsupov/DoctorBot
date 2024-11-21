@@ -38,7 +38,7 @@ async def start_command_handler(
             )
         )
         return
-    elif isinstance(telegram_user, Patient):
+    elif isinstance(telegram_user, Patient) and not command.args:
         await message.answer(
             message_text,
             reply_markup=get_reply_keyboard(
@@ -52,10 +52,7 @@ async def start_command_handler(
     if not command.args:
         message_text += '\nОтправь свое ФИО одним сообщением'
         
-        await message.answer(
-            message_text, 
-            reply_markup=reply_cancel_keyboard
-        )
+        await message.answer(message_text)
         await state.set_state(DoctorState.fio)
         return
     

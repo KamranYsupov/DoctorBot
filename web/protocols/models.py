@@ -6,7 +6,11 @@ from web.utils.base_manager import AsyncBaseManager
 
 class Protocol(models.Model):
     drugs = models.JSONField(_('Список препаратов'), default=list())
-    patient_name = models.CharField(_('Имя пациента'), max_length=150)
+    patient_name = models.CharField(
+        _('Имя пациента'), 
+        db_index=True,
+        max_length=150
+    )
     first_take = models.DateField(
         _('День первого приема'),
         auto_now=False,
@@ -14,6 +18,7 @@ class Protocol(models.Model):
     )
     last_take = models.DateField(
         _('День последнего приема'),
+        db_index=True,
         auto_now=False,
         auto_now_add=False
     )
@@ -28,6 +33,7 @@ class Protocol(models.Model):
     )
     notifications_calendar = models.JSONField(
         _('Календарь для проверки отправки уведомлений'),
+        db_index=True,
         default=dict()
     )
     
@@ -35,12 +41,14 @@ class Protocol(models.Model):
         'doctors.Doctor',
         verbose_name=_('Доктор'),
         related_name='protocols',
+        db_index=True,
         on_delete=models.CASCADE,
     )
     patient = models.ForeignKey(
         'patients.Patient',
         verbose_name=_('Пациент'),
         related_name='protocols',
+        db_index=True,
         on_delete=models.CASCADE,
         null=True,
         default=None,

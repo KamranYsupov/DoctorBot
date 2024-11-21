@@ -15,7 +15,7 @@ class ProtocolBaseSchema(BaseModel):
     last_take: date
     time_to_take: time
     reception_calendar: Dict
-    notificatons_calendar: Dict
+    notifications_calendar: Dict
     
 
 class ProtocolSchema(ProtocolBaseSchema):

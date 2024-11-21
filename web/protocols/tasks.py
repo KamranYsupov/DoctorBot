@@ -1,4 +1,5 @@
-﻿from datetime import timedelta
+﻿import time
+from datetime import timedelta
 
 import loguru
 from celery import shared_task
@@ -10,7 +11,8 @@ from web.utils.telegram_service import send_messsage
 
 
 @shared_task
-def send_notification(protocol_id):
+def send_notification(protocol_id: int, sleep: int | float):
+    time.sleep(sleep)
     protocol = Protocol.objects.get(id=protocol_id)
     telegram_id = protocol.patient.telegram_id
     
@@ -37,8 +39,15 @@ def send_notification(protocol_id):
     
 
 @shared_task
-def send_reminder(protocol_id):
+def send_reminder(protocol_id: int, sleep: int | float):
+    time.sleep(sleep)
     protocol = Protocol.objects.get(id=protocol_id)
+    now = timezone.now()
+    current_date_strformat = now.strftime('%d.%m.%Y')
+    
+    if protocol.notifications_calendar[current_date_strformat]:
+        return 
+        
     telegram_id = protocol.patient.telegram_id
     
     drugs_string = ', '.join(protocol.drugs)
@@ -59,16 +68,21 @@ def schedule_notifications():
     current_date_strformat = now.strftime('%d.%m.%Y')
     current_protocols = (
         Protocol.objects
-        .filter(last_take__gte=now.date(), patient__isnull=False)
+        .filter(
+            first_take__lte=now.date(),
+            last_take__gte=now.date(),
+            patient__isnull=False,
+        )
         .select_related('doctor', 'patient')
-    ) # Достаем только те протоколы, которые ещё не истекли
-    loguru.logger.info(f'Current: {current_protocols}')
+    ) # Достаем только активные на сегодняшнее число протоколы
+
     unnotificated_protocols = [
-        protocol for protocol in current_protocols 
-        if protocol.notifications_calendar[current_date_strformat] == False
+        protocol for protocol in current_protocols
+        if protocol.notifications_calendar.get(current_date_strformat) == False
     ] # Протоколы, по которым еще нет задач с уведомлением
     
     loguru.logger.info(str(unnotificated_protocols))
+    
     for protocol in unnotificated_protocols:
         time_to_take = timezone.make_aware(
             timezone.datetime.combine(
@@ -76,19 +90,23 @@ def schedule_notifications():
                 protocol.time_to_take
             )
         )
-        if time_to_take > now:
-            for minutes_before in [15, 5]:
-                notification_time = time_to_take - timedelta(minutes=minutes_before)
-                send_notification.apply_async(
-                    args=[protocol.id], 
-                    eta=notification_time
-                )
+        loguru.logger.info(f'time_to_take - {time_to_take}')
+                
+        for minutes_before in [2, 1]:
+            notification_time = time_to_take - timedelta(minutes=minutes_before)
+            if now > notification_time:
+                continue
+            
+            sleep = (notification_time - now).total_seconds()
+            loguru.logger.info(f'sleep - {sleep}')
+            send_notification.delay(protocol.id, sleep)
 
         
-        reminder_start_time = time_to_take
         for i in range(1, 7):  # 6 напоминаний по 5 минут каждое
-            reminder_time = reminder_start_time + timedelta(minutes=i * 5)
-            send_reminder.apply_async(args=[protocol.id], eta=reminder_time)
+            reminder_time = time_to_take + timedelta(minutes=i * 5)
+            
+            sleep = (reminder_time - now).total_seconds()
+            send_reminder.delay(protocol.id, sleep)
             
         protocol.notifications_calendar[current_date_strformat] = True
         
