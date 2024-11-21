@@ -12,7 +12,6 @@ from web.utils.telegram_service import (
     telegram_service,
     send_message_until_success,
 )
-from web.utils.smsc_service import smsc_service
 
 
 @shared_task(ignore_result=True)
