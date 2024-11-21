@@ -119,7 +119,12 @@ async def process_period(message: types.Message, state: FSMContext):
 
 @router.message(CreateProtocolState.time_to_take, F.text)
 async def process_time_to_take(message: types.Message, state: FSMContext):
-    time_to_take = await valdate_time_to_take_from_message(message) 
+    state_data = await state.get_data()
+
+    time_to_take = await valdate_time_to_take_from_message(
+        message,
+        first_take=state_data['first_take']
+    ) 
     if not time_to_take:
         return 
     

@@ -193,11 +193,15 @@ async def start_edit_time_to_take_handler(
     
 @router.message(EditProtocolState.time_to_take, F.text)
 async def process_edit_time_to_take(message: types.Message, state: FSMContext):
-    time_to_take = await valdate_time_to_take_from_message(message)
+    protocol = await get_protocol_from_state(state)
+    
+    time_to_take = await valdate_time_to_take_from_message(
+        message,
+        first_take=protocol.first_take
+    )
     if not time_to_take:
         return 
         
-    protocol = await get_protocol_from_state(state)
     protocol.time_to_take = time_to_take
     await sync_to_async(protocol.save)()
     

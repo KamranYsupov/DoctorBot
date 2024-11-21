@@ -34,9 +34,6 @@ async def valdate_first_take_from_message(message: types.Message) -> date | None
     if day < now.day:
         await message.answer('Нельзя выбирать прошедшие числа')
         return
-    if day == now.day:
-        await message.answer('Нельзя выбирать текущую дату')
-        return 
     
     first_take = date(year, month, day)
     
@@ -55,13 +52,30 @@ async def valdate_period_from_message(message: types.Message) -> int | None:
     return period
         
         
-async def valdate_time_to_take_from_message(message: types.Message) -> time | None:
+async def valdate_time_to_take_from_message(
+    message: types.Message,
+    first_take: date,
+) -> time | None:
     try:
         hour, minute = message.text.split(':')
         time_to_take = time(int(hour), int(minute))
     except ValueError or TypeError:
         await message.answer('Некорректный формат ввода')
-        return 
+        return
+    
+    now = timezone.now()
+    print(first_take)
+    print(now.date())
+    print((now + timedelta(minutes=30)).time())
+    print(time_to_take)
+    if first_take != now.date():
+        return time_to_take
+    
+    if (now + timedelta(minutes=30)).time() > time_to_take:
+        await message.answer(
+            'Время приёма должно быть позже 30 минут относительно текущего времени'
+        )
+        return
     
     return time_to_take
 
