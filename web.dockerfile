@@ -2,16 +2,13 @@ FROM python:3.11
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-ENV UWSGI_PROCESSES 4
-ENV UWSGI_THREADS 8
-ENV UWSGI_HARAKIRI 60
 ENV DJANGO_SETTINGS_MODULE 'web.core.settings'
 
-WORKDIR /
+WORKDIR /app
 
 COPY ./pyproject.toml pyproject.toml
-RUN mkdir -p /web/static/ && \
-    mkdir -p /web/media/  &&  \
+RUN mkdir -p /app/web/static/ && \
+    mkdir -p /app/web/media/  &&  \
     pip install --upgrade pip && \
     pip install 'poetry>=1.4.2' && \
     poetry config virtualenvs.create false && \
@@ -21,7 +18,7 @@ COPY . .
 
 EXPOSE 8000
 
-COPY ./web/entrypoint.sh /entrypoint.sh
+COPY ./entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
 

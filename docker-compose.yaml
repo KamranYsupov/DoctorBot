@@ -2,7 +2,7 @@ version: '3.3'
 
 x-function: &base_python
   volumes:
-    - ./:/:rw
+    - ./:/app/:rw  
     - poetry-volume:/poetry:delegated
   environment: &env-vars
     POETRY_HOME: /poetry
@@ -17,7 +17,6 @@ x-function: &base_python
     - .env
   networks:
     - internal
-
 
 services:
   db:
@@ -44,8 +43,8 @@ services:
     build: ./nginx
     container_name: ${PROJECT_NAME}_nginx
     volumes:
-      - static_dir:/web/static/
-      - media_dir:/web/media/
+      - static_dir:/app/web/static/  
+      - media_dir:/app/web/media/ 
     ports:
       - "80:80"
     depends_on:
@@ -60,8 +59,8 @@ services:
       dockerfile: web.dockerfile
     container_name: ${PROJECT_NAME}_web
     volumes:
-      - static_dir:/web/static/
-      - media_dir:/web/media/
+      - static_dir:/app/web/static/  
+      - media_dir:/app/web/media/ 
 
   bot:
     <<: *base_python

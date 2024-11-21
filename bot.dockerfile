@@ -3,7 +3,7 @@ FROM python:3.11
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /
+WORKDIR /app
 
 COPY ./pyproject.toml pyproject.toml
 RUN pip install --upgrade pip && \
@@ -11,5 +11,6 @@ RUN pip install --upgrade pip && \
     poetry config virtualenvs.create false && \
     poetry install --no-root --no-dev
 
+COPY . .
 
 CMD ['python' 'bot/main.py']
