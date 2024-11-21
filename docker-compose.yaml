@@ -5,11 +5,13 @@ x-function: &python
       context: .
       dockerfile: app.dockerfile
   volumes:
-    - ./bot:/bot:rw
-    - ./web:/web:rw
     - poetry-volume:/opt/poetry:delegated
   environment: &env-vars
     POETRY_HOME: /opt/poetry
+    DB_HOST: ${DB_HOST}
+    DB_NAME: ${DB_NAME}
+    DB_USER: ${DB_USER}
+    DB_PASS: ${DB_PASSWORD}
   networks:
     - internal
   depends_on:
@@ -39,14 +41,56 @@ services:
   web:
     <<: *python
     container_name: ${PROJECT_NAME}_web
+    volumes:
+    - ./web:/web:rw
     command: >
-      sh -c "python web.manage.py runserver"
+      sh -c "
+      python manage.py migrate --noinput
+      python manage.py runserver"
 
   bot:
     <<: *python
     container_name: ${PROJECT_NAME}_bot
+    volumes:
+    - ./bot:/bot:rw
     command: >
       sh -c "python bot.main.py"
+
+  redis:
+    image: redis:7.0.11-alpine
+    hostname: redis
+    ports:
+      - '6379:6379'
+
+  worker:
+    hostname: worker
+    entrypoint: celery
+    volumes:
+      - ./:/
+
+    command: >
+       -A web.core.celery worker -l info -P gevent
+    links:
+      - redis
+    depends_on:
+      - app_db
+      - redis
+
+  flower:
+    hostname: flower
+    entrypoint: celery
+    command: -A web.core.celery flower -P gevent
+    volumes:
+      - ./:/
+    links:
+      - redis
+    depends_on:
+      - app_db
+      - worker
+      - redis
+    ports:
+      - '5555:5555'
+
 
 volumes:
   app_db-template:
