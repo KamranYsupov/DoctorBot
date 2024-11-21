@@ -3,11 +3,18 @@ from aiogram import types, F, Router
 from aiogram.filters import StateFilter, Command, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from aiogram.exceptions import TelegramBadRequest
 from asgiref.sync import sync_to_async
 
 from keyboards.inline import get_inline_keyboard
-from keyboards.reply import reply_keyboard_remove, get_reply_keyboard
+from keyboards.reply import (
+    reply_keyboard_remove,
+    get_reply_keyboard,
+    reply_patient_keyboard,
+    reply_doctor_keyboard
+)
 from schemas.doctor import DoctorCreateSchema
+from orm.telegram_user import get_doctor_or_patient
 from web.doctors.models import Doctor
 
 router = Router()
@@ -17,19 +24,59 @@ class DoctorState(StatesGroup):
     fio = State()
 
 
+async def cancel_handler(
+    message: types.Message,
+    state: FSMContext,
+    telegram_id: int,
+):
+    telegram_user = await get_doctor_or_patient(telegram_id)
+    reply_markup = reply_patient_keyboard
+    
+    if not telegram_user:
+        reply_markup = reply_keyboard_remove
+    elif isinstance(telegram_user, Doctor):
+        reply_markup = reply_doctor_keyboard
+
+    message_data = {'text': 'Действие отменено'}
+    
+    try:
+        await message.edit_text(**message_data)
+    except TelegramBadRequest:
+        message_data['reply_markup'] = reply_markup
+        await message.answer(**message_data)
+        
+    await state.clear()
+    
+
+@router.callback_query(
+    StateFilter('*'),
+    (F.data == 'cancel')
+)
+async def cancel_callback_handler(
+    callback: types.CallbackQuery,
+    state: FSMContext,
+):
+    await cancel_handler(
+        message=callback.message,
+        state=state,
+        telegram_id=callback.from_user.id
+    )
+
+
 @router.message(
     StateFilter('*'),
     or_f(Command('cancel'), (F.text.lower() == 'отмена ❌'))
 )
-async def cancel_handler(
-        message: types.Message,
-        state: FSMContext,
+async def cancel_message_handler(
+    message: types.Message,
+    state: FSMContext,
 ):
-    await message.answer(
-        'Действие отменено',
-        reply_markup=reply_keyboard_remove,
+    await cancel_handler(
+        message=message,
+        state=state,
+        telegram_id=message.from_user.id
     )
-    await state.clear()
+
 
 
 @router.message(DoctorState.fio, F.text)

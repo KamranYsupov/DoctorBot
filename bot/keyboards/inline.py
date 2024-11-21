@@ -36,3 +36,17 @@ def get_menu_keyboard():
     )
     
     return keyboard.adjust(1, 1, 1).as_markup()
+
+
+def get_protocol_inline_button_keyboard(
+    protocol_id: int,
+    page_number: int = 1,
+):
+    buttons = {'Вернутся к протоколу 🔙': f'protocol_{page_number}_{protocol_id}'}
+    
+    return get_inline_keyboard(buttons=buttons)
+
+
+inline_cancel_keyboard = get_inline_keyboard(
+    buttons={'Отмена ❌': 'cancel'}
+)

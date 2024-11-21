@@ -8,7 +8,12 @@ from django.db.transaction import atomic
 
 from .fio import DoctorState
 from schemas.patient import PatientCreateSchema
-from keyboards.reply import get_reply_keyboard, reply_cancel_keyboard
+from keyboards.reply import (
+    reply_cancel_keyboard,
+    get_reply_keyboard,
+    reply_patient_keyboard,
+    reply_doctor_keyboard
+)
 from orm.patient import get_or_create_patient_and_update_protocol
 from orm.telegram_user import get_doctor_or_patient
 from web.protocols.models import Protocol
@@ -33,17 +38,13 @@ async def start_command_handler(
     elif isinstance(telegram_user, Doctor):
         await message.answer(
             message_text,
-            reply_markup=get_reply_keyboard(
-                buttons=('Меню 📁', 'Старт нового протокола 📝')
-            )
+            reply_markup=reply_doctor_keyboard
         )
         return
     elif isinstance(telegram_user, Patient) and not command.args:
         await message.answer(
             message_text,
-            reply_markup=get_reply_keyboard(
-                buttons=('Меню 📁',)
-            )
+            reply_markup=reply_patient_keyboard
         )
         return
     
@@ -52,7 +53,10 @@ async def start_command_handler(
     if not command.args:
         message_text += '\nОтправь свое ФИО одним сообщением'
         
-        await message.answer(message_text)
+        await message.answer(
+            message_text,
+            reply_markup=reply_cancel_keyboard,
+        )
         await state.set_state(DoctorState.fio)
         return
     
@@ -77,7 +81,7 @@ async def start_command_handler(
             
     await message.answer(
         'Протокол успешно добавлен! Выберите действие.',
-        reply_markup=get_reply_keyboard(buttons=('Меню 📁', ))
+        reply_markup=reply_patient_keyboard
     )
 
     

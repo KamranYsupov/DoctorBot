@@ -246,13 +246,13 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
         reply_markup=get_inline_keyboard(
             buttons={
                 'Изменить препараты 📝': f'edit_drugs_{protocol.id}',
-                'Изменить дату первого приема 📝': f'edit_first_take_{protocol.id}',
-                'Изменить срок приема 📝': f'edit_period_{protocol.id}',
-                'Изменить время приема 📝': f'edit_time_to_take_{protocol.id}',
+                'Изменить дату первого приёма 📝': f'edit_first_take_{protocol.id}',
+                'Изменить срок приёма 📝': f'edit_period_{protocol.id}',
+                'Изменить время приёма 📝': f'edit_time_to_take_{protocol.id}',
                 'Назад 🔙': f'protocol_{page_number}_{protocol_id}'
-            }        
+            },
+            sizes=(1, 1, 1, 1, 1),        
         ),
-        sizes=(1, 1, 1, 1, 1)
         parse_mode='HTML'
     )
     

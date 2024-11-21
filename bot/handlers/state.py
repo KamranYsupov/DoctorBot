@@ -1,16 +1,17 @@
 from aiogram.fsm.state import StatesGroup, State
 
-
-class BaseProtocolState(StatesGroup):
+    
+class CreateProtocolState(StatesGroup):
+    patient_name = State()
     drugs = State()
     first_take = State()
     period = State()
     time_to_take = State()
     
-    
-class CreateProtocolState(BaseProtocolState):
-    patient_name = State()
-    
 
-class EditProtocolState(BaseProtocolState):
+class EditProtocolState(StatesGroup):
     protocol_id = State()
+    drugs = State()
+    first_take = State()
+    period = State()
+    time_to_take = State()
