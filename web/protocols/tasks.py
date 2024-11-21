@@ -7,18 +7,22 @@ from django.utils import timezone
 from django.conf import settings
 
 from .models import Protocol
-from web.utils.telegram_service import send_messsage
+from web.utils.telegram_service import telegram_service
 
 
 @shared_task
-def send_notification(protocol_id: int, sleep: int | float):
+def send_reminder_before_time_to_take(
+    protocol_id: int,
+    minutes_before: int,
+    sleep: int | float
+):
     time.sleep(sleep)
     protocol = Protocol.objects.get(id=protocol_id)
     telegram_id = protocol.patient.telegram_id
     
     drugs_string = ', '.join(protocol.drugs)
-    text = f'Осталось {minutes_before} \
-        минут до приема лекарств: <em>{drugs_string}</em>'
+    text = f'Осталось {minutes_before} '\
+       f'минут до приема лекарств: <em>{drugs_string}</em>'
     
     inline_keyboard = [[
         {
@@ -29,7 +33,7 @@ def send_notification(protocol_id: int, sleep: int | float):
     
     reply_markup = {'inline_keyboard': inline_keyboard}
     
-    response = send_messsage(
+    response = telegram_service.send_messsage(
         chat_id=telegram_id,
         text=text, 
         reply_markup=reply_markup,
@@ -39,22 +43,22 @@ def send_notification(protocol_id: int, sleep: int | float):
     
 
 @shared_task
-def send_reminder(protocol_id: int, sleep: int | float):
+def send_reminder_after_time_to_take(protocol_id: int, sleep: int | float):
     time.sleep(sleep)
     protocol = Protocol.objects.get(id=protocol_id)
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
     
-    if protocol.notifications_calendar[current_date_strformat]:
+    if protocol.reception_calendar[current_date_strformat]:
         return 
         
     telegram_id = protocol.patient.telegram_id
     
     drugs_string = ', '.join(protocol.drugs)
-    text = f'Напоминаем, что \
-        пора принять лекарства: {drugs_string}'
+    text = f'Напоминаем, что ' \
+        f'пора принять лекарства: {drugs_string}'
 
-    response = send_messsage(
+    response = telegram_service.send_messsage(
         chat_id=telegram_id,
         text=text, 
     )
@@ -80,9 +84,7 @@ def schedule_notifications():
         protocol for protocol in current_protocols
         if protocol.notifications_calendar.get(current_date_strformat) == False
     ] # Протоколы, по которым еще нет задач с уведомлением
-    
-    loguru.logger.info(str(unnotificated_protocols))
-    
+        
     for protocol in unnotificated_protocols:
         time_to_take = timezone.make_aware(
             timezone.datetime.combine(
@@ -90,27 +92,31 @@ def schedule_notifications():
                 protocol.time_to_take
             )
         )
-        loguru.logger.info(f'time_to_take - {time_to_take}')
                 
-        for minutes_before in [2, 1]:
+        for minutes_before in (15, 5):
             notification_time = time_to_take - timedelta(minutes=minutes_before)
             if now > notification_time:
                 continue
             
             sleep = (notification_time - now).total_seconds()
-            loguru.logger.info(f'sleep - {sleep}')
-            send_notification.delay(protocol.id, sleep)
+            send_reminder_before_time_to_take.delay(
+                protocol.id, 
+                minutes_before,
+                sleep
+            )
 
         
         for i in range(1, 7):  # 6 напоминаний по 5 минут каждое
-            reminder_time = time_to_take + timedelta(minutes=i * 5)
+            reminder_time = time_to_take + timedelta(minutes=i * 5) 
             
             sleep = (reminder_time - now).total_seconds()
-            send_reminder.delay(protocol.id, sleep)
+            send_reminder_after_time_to_take.delay(
+                protocol.id,
+                sleep
+            )
             
         protocol.notifications_calendar[current_date_strformat] = True
         
     if unnotificated_protocols:
         Protocol.objects.bulk_update(unnotificated_protocols, ['notifications_calendar'])
         
-    return unnotificated_protocols

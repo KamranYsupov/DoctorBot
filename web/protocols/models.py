@@ -5,7 +5,7 @@ from web.utils.base_manager import AsyncBaseManager
 
 
 class Protocol(models.Model):
-    drugs = models.JSONField(_('Список препаратов'), default=list())
+    drugs = models.JSONField(_('Список препаратов'), default=list)
     patient_name = models.CharField(
         _('Имя пациента'), 
         db_index=True,
@@ -29,12 +29,12 @@ class Protocol(models.Model):
     )
     reception_calendar = models.JSONField(
         _('Календарь према препаратов'),
-        default=dict()
+        default=dict
     )
     notifications_calendar = models.JSONField(
         _('Календарь для проверки отправки уведомлений'),
         db_index=True,
-        default=dict()
+        default=dict
     )
     
     doctor = models.ForeignKey(
@@ -61,7 +61,7 @@ class Protocol(models.Model):
         verbose_name_plural = _('Протоколы')
 
     def __str__(self):
-        return self.patient_name
+        return f'ID {self.id} | {self.patient_name}'
     
     @property
     def period(self) -> int:

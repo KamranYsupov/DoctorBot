@@ -23,25 +23,18 @@ from utils.validators import get_integer_from_string
 from utils.protocol import get_timedelta_calendar
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
+from .state import CreateProtocolState
 
 router = Router()
-
-
-class ProtocolState(StatesGroup):
-    patient_name = State()
-    drugs = State()
-    first_take = State()
-    period = State()
-    time_to_take = State()
     
     
 @router.message(F.text.casefold() == 'старт нового протокола 📝')
 async def start_protocol_handler(message: types.Message, state: FSMContext):
     await message.answer('Введите имя пациента', reply_markup=reply_cancel_keyboard)    
-    await state.set_state(ProtocolState.patient_name)
+    await state.set_state(CreateProtocolState.patient_name)
     
     
-@router.message(ProtocolState.patient_name, F.text)
+@router.message(CreateProtocolState.patient_name, F.text)
 async def process_patient_name(message: types.Message, state: FSMContext):
     patient_name = message.text
     if len(patient_name) > 150:
@@ -51,16 +44,16 @@ async def process_patient_name(message: types.Message, state: FSMContext):
     
     await state.update_data(patient_name=patient_name)
     await message.answer('Введите название препарата') 
-    await state.set_state(ProtocolState.drugs)
+    await state.set_state(CreateProtocolState.drugs)
     
     
 
-@router.message(ProtocolState.drugs, F.text)
+@router.message(CreateProtocolState.drugs, F.text)
 async def process_drug_name(message: types.Message, state: FSMContext):
     drug_name = message.text
     if len(drug_name) > 150:
         return await message.answer(
-            'Длина названия препарата не должна превышать 150 символов'
+            'Длина название препарата не должна превышать 150 символов'
         )
     
     state_data = await state.get_data()
@@ -81,10 +74,10 @@ async def process_drug_name(message: types.Message, state: FSMContext):
         'Выберите день первого приёма',
         reply_markup=reply_calendar_keyboard,
     ) 
-    await state.set_state(ProtocolState.first_take)
+    await state.set_state(CreateProtocolState.first_take)
     
 
-@router.message(ProtocolState.first_take, F.text)
+@router.message(CreateProtocolState.first_take, F.text)
 async def process_first_take(message: types.Message, state: FSMContext):
     now = timezone.now()
     year = now.year
@@ -107,10 +100,10 @@ async def process_first_take(message: types.Message, state: FSMContext):
         'Сколько дней нужно принемать лекарства?',
         reply_markup=reply_cancel_keyboard
     ) 
-    await state.set_state(ProtocolState.period)
+    await state.set_state(CreateProtocolState.period)
     
     
-@router.message(ProtocolState.period, F.text)
+@router.message(CreateProtocolState.period, F.text)
 async def process_period(message: types.Message, state: FSMContext):
     period = get_integer_from_string(message.text)
     if not period:
@@ -127,11 +120,11 @@ async def process_period(message: types.Message, state: FSMContext):
         '<b>Пример:</b> <b><em>12:35</em></b>',
         parse_mode='HTML',
     ) 
-    await state.set_state(ProtocolState.time_to_take)
+    await state.set_state(CreateProtocolState.time_to_take)
     
     
 
-@router.message(ProtocolState.time_to_take, F.text)
+@router.message(CreateProtocolState.time_to_take, F.text)
 async def process_time_to_take(message: types.Message, state: FSMContext):
     try:
         hour, minute = message.text.split(':')
@@ -178,7 +171,7 @@ async def create_protocol_handler(callback: types.CallbackQuery, state: FSMConte
 async def add_drug_handler(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer('Введите название препарата') 
-    await state.set_state(ProtocolState.drugs)
+    await state.set_state(CreateProtocolState.drugs)
     
     
 async def send_finish_protocol_message(

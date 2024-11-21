@@ -252,6 +252,7 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
                 'Назад 🔙': f'protocol_{page_number}_{protocol_id}'
             }        
         ),
+        sizes=(1, 1, 1, 1, 1)
         parse_mode='HTML'
     )
     

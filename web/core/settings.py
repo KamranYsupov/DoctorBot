@@ -142,6 +142,9 @@ REDIS_DEFAULT_DB = os.environ.get('REDIS_DEFAULT_DB', 2)
 
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_RESULT_CELERY}'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CElERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-TELEGRAM_API_URL = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
+TELEGRAM_API_URL = 'https://api.telegram.org'
