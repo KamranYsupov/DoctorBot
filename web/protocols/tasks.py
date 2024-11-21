@@ -129,7 +129,7 @@ def set_notifications():
     
     unnotificated_protocols = [
         protocol for protocol in current_protocols
-        if protocol.notifications_calendar.get(current_date_strformat) == False:
+        if protocol.notifications_calendar.get(current_date_strformat) == False
     ]
             
     for protocol in unnotificated_protocols:
