@@ -54,7 +54,6 @@ async def valdate_period_from_message(message: types.Message) -> int | None:
         
 async def valdate_time_to_take_from_message(
     message: types.Message,
-    first_take: date,
 ) -> time | None:
     try:
         hour, minute = message.text.split(':')
