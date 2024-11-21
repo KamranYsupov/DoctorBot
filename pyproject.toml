@@ -19,6 +19,7 @@ celery = "^5.4.0"
 redis = "^5.2.0"
 gevent = "^24.11.1"
 flower = "^2.0.1"
+gunicorn = "^23.0.0"
 
 
 [build-system]
