@@ -162,7 +162,7 @@ def set_notifications():
                 eta=eta
             )
             
-            if i == 6:
+            if i == settings.REMNDERS_COUNT_AFTER_TIME_TO_TAKE + 1:
                 eta += timedelta(seconds=30)
                 notify_doctor_about_drug_take_miss.apply_async(
                     args=(protocol.id,),
