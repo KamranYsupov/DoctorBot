@@ -1,10 +1,8 @@
 version: '3.3'
 
-x-function: &base_backend
-  build:
-    context: .
-    dockerfile: app.dockerfile
+x-function: &base_python
   volumes:
+    - ./:/opt/:rw
     - poetry-volume:/opt/poetry:delegated
   environment: &env-vars
     POETRY_HOME: /opt/poetry
@@ -12,25 +10,14 @@ x-function: &base_backend
     DB_NAME: ${DB_NAME}
     DB_USER: ${DB_USER}
     DB_PASS: ${DB_PASSWORD}
-  networks:
-    - internal
   depends_on:
     - db
+    - redis
   env_file:
     - .env
+  networks:
+    - internal
 
-x-function: &base_celery
-  <<: *base_backend
-  entrypoint: celery
-  volumes:
-      - static_dir:/opt/src/static/
-      - media_dir:/opt/src/media/
-      - ./web:/opt/web:rw
-  links:
-    - redis
-  depends_on:
-    - db
-    - redis
 
 services:
   db:
@@ -67,22 +54,21 @@ services:
       - internal
 
   web:
-    <<: *base_backend
-    container_name: ${PROJECT_NAME}_web
+    <<: *base_python
+    build:
+      context: ./web
+      dockerfile: web.dockerfile
+    container_name: ${PROJECT_SLUG}_web
     volumes:
-      - static_dir:/opt/src/static/
-      - media_dir:/opt/src/media/
-      - ./web:/opt/web:rw
-    command: >
-      sh -c "python manage.py collectstatic --noinput && python manage.py migrate && gunicorn web.core.wsgi:application --bind 0.0.0.0:8000"
+      - static_dir:/opt/web/static/
+      - media_dir:/opt/web/media/
 
   bot:
-    <<: *base_backend
+    <<: *base_python
+    build:
+      context: ./bot
+      dockerfile: bot.dockerfile
     container_name: ${PROJECT_NAME}_bot
-    volumes:
-      - ./bot:/opt/bot:rw
-    command: >
-      sh -c "python bot/main.py"
 
   redis:
     image: redis:7.0.11-alpine
@@ -97,17 +83,22 @@ services:
       - .env
 
   worker:
-    <<: *base_celery
+    <<: *base_python
     hostname: worker
+    entrypoint: celery
     command: >
       -A web.core.celery worker -l info -P gevent
+    links:
+      - redis
 
   beat:
-    <<: *base_celery
+    <<: *base_python
     hostname: beat
+    entrypoint: celery
     command: >
       -A web.core.celery beat -l debug
-
+    links:
+      - redis
 
 volumes:
   static_dir:
