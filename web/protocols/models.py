@@ -33,7 +33,6 @@ class Protocol(models.Model):
     )
     notifications_calendar = models.JSONField(
         _('Календарь для проверки отправки уведомлений'),
-        db_index=True,
         default=dict
     )
     

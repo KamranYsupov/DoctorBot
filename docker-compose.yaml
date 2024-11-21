@@ -80,6 +80,7 @@ services:
       - internal
     env_file:
       - .env
+    restart: always
 
   worker:
     <<: *base_python
@@ -92,6 +93,7 @@ services:
       -A web.core.celery worker -l info -P gevent
     links:
       - redis
+    restart: always
 
   beat:
     <<: *base_python
@@ -100,10 +102,10 @@ services:
       dockerfile: web.dockerfile
     hostname: beat
     entrypoint: celery
-    command: >
-      -A web.core.celery beat -l debug
+    command: -A web.core.celery beat -l debug
     links:
       - redis
+    restart: always
 
   flower:
     <<: *base_python
@@ -117,6 +119,7 @@ services:
       - redis
     ports:
       - "5555:5555"
+    restart: always
 
 volumes:
   static_dir:

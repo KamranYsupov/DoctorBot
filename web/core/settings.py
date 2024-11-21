@@ -142,7 +142,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB_CELERY = os.environ.get('REDIS_DB_CELERY', 0)
 REDIS_DB_RESULT_CELERY = os.environ.get('REDIS_DB_RESULT_CELERY', 1)
@@ -156,3 +156,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 TELEGRAM_API_URL = 'https://api.telegram.org'
+
+SET_NOTIFICATIONS_SCHEDULE = 300.0 # 5 минут
+SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE = (15, 5)
+SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE = 5
