@@ -1,9 +1,9 @@
 version: '3.8'
 
-x-function: &python
+x-function: &base_backend
   build:
-      context: .
-      dockerfile: app.dockerfile
+    context: .
+    dockerfile: app.dockerfile
   volumes:
     - poetry-volume:/opt/poetry:delegated
   environment: &env-vars
@@ -17,10 +17,20 @@ x-function: &python
   depends_on:
     - app_db
   env_file:
-    .env
+    - .env
+
+y-function: &base_celery
+  <<: *base_backend
+  entrypoint: celery
+  volumes:
+    - ./:/
+  links:
+    - redis
+  depends_on:
+    - app_db
+    - redis
 
 services:
-
   app_db:
     container_name: ${PROJECT_NAME}_db
     image: postgres:11
@@ -39,20 +49,20 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
 
   web:
-    <<: *python
+    <<: *base_backend
     container_name: ${PROJECT_NAME}_web
     volumes:
-    - ./web:/web:rw
+      - ./web:/web:rw
     entrypoint: python
     command: >
-      manage.py migrate --noinput
+      manage.py migrate --noinput &&
       manage.py runserver
 
   bot:
-    <<: *python
+    <<: *base_backend
     container_name: ${PROJECT_NAME}_bot
     volumes:
-    - ./bot:/bot:rw
+      - ./bot:/bot:rw
     command: >
       sh -c "python bot.main.py"
 
@@ -63,46 +73,24 @@ services:
       - '6379:6379'
 
   worker:
+    <<: *base_celery
     hostname: worker
-    entrypoint: celery
-    volumes:
-      - ./:/
     command: >
-       -A web.core.celery worker -l info -P gevent
-    links:
-      - redis
-    depends_on:
-      - app_db
-      - redis
+      -A web.core.celery worker -l info -P gevent
 
   beat:
-    hostname: worker
-    entrypoint: celery
-    volumes:
-      - ./:/
+    <<: *base_celery
+    hostname: beat
     command: >
-       -A web.core.celery beat -l debug 
-    links:
-      - redis
-    depends_on:
-      - app_db
-      - redis
+      -A web.core.celery beat -l debug
 
   flower:
+    <<: *base_celery
     hostname: flower
-    entrypoint: celery
-    command: -A web.core.celery flower -P gevent
-    volumes:
-      - ./:/
-    links:
-      - redis
-    depends_on:
-      - app_db
-      - worker
-      - redis
+    command: >
+      -A web.core.celery flower -P gevent
     ports:
       - '5555:5555'
-
 
 volumes:
   app_db-template:
