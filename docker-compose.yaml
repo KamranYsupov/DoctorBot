@@ -58,7 +58,7 @@ services:
     build:
       context: ./web
       dockerfile: web.dockerfile
-    container_name: ${PROJECT_SLUG}_web
+    container_name: ${PROJECT_NAME}_web
     volumes:
       - static_dir:/opt/web/static/
       - media_dir:/opt/web/media/
