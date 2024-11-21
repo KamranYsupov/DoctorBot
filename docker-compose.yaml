@@ -63,7 +63,7 @@ services:
     <<: *base_backend
     container_name: ${PROJECT_NAME}_web
     command: >
-      sh -c "python manage.py migrate && gunicorn app.wsgi:application --bind 0.0.0.0:8000"
+      sh -c "python manage.py migrate && gunicorn web.core.wsgi:application --bind 0.0.0.0:8000"
 
   bot:
     <<: *base_backend
