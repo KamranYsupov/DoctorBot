@@ -105,6 +105,19 @@ services:
     links:
       - redis
 
+  flower:
+    <<: *base_python
+    build:
+      context: .
+      dockerfile: web.dockerfile
+    hostname: flower
+    entrypoint: celery
+    command: -A kamranproject flower -P gevent
+    links:
+      - redis
+    ports:
+      - "5555:5555"
+
 volumes:
   static_dir:
   media_dir:
