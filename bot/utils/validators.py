@@ -63,20 +63,6 @@ async def valdate_time_to_take_from_message(
         await message.answer('Некорректный формат ввода')
         return
     
-    now = timezone.now()
-    datetime_to_take = timezone.make_aware(
-        timezone.datetime.combine(
-            now.date(),
-            time_to_take
-        )
-    )
-
-    if now + timedelta(minutes=30) > datetime_to_take:
-        await message.answer(
-            'Время приёма должно быть позже 30 минут относительно текущего времени'
-        )
-        return
-    
     return time_to_take
 
 
