@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import date, time 
 
 from pydantic import BaseModel, Field
@@ -12,8 +12,10 @@ class ProtocolBaseSchema(BaseModel):
     patient_name: str
     drugs: List[str]
     first_take: date
-    period: int
+    last_take: date
     time_to_take: time
+    reception_calendar: Dict
+    notifications_calendar: Dict
     
 
 class ProtocolSchema(ProtocolBaseSchema):

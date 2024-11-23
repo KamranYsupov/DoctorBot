@@ -27,7 +27,7 @@ async def cancel_handler(
 ):
     await message.answer(
         'Действие отменено',
-        reply_keyboard=reply_keyboard_remove
+        reply_markup=reply_keyboard_remove,
     )
     await state.clear()
 

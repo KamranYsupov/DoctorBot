@@ -7,6 +7,7 @@ from aiogram.types import (
     KeyboardButton,
     ReplyKeyboardRemove,
 )
+from django.utils import timezone
 
 
 def get_reply_keyboard(
@@ -22,8 +23,10 @@ def get_reply_keyboard(
     
     
 def get_reply_calendar_keyboard():
-    year = datetime.now().year
-    month = datetime.now().month
+    now = timezone.now()
+
+    year = now.year
+    month = now.month
     # Создаем объект календаря
     cal = calendar.Calendar()
     
@@ -62,3 +65,11 @@ def get_reply_calendar_keyboard():
 reply_cancel_keyboard = get_reply_keyboard(buttons=('Отмена ❌',))
 reply_keyboard_remove = ReplyKeyboardRemove()
 reply_calendar_keyboard = get_reply_calendar_keyboard()
+reply_menu_keyboard = get_reply_keyboard(
+    buttons=(
+        'Протоколы 🗂️',
+        'FAQ ❔',
+        'Связатся с менеджером ☎',
+      #  'Назад 🔙',
+    )
+)
