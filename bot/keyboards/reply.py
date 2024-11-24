@@ -58,6 +58,8 @@ def get_reply_calendar_keyboard():
     # Добавляем последнюю строку, если она не пуста
     if row:
         keyboard.append(row)
+        
+    keyboard.append([KeyboardButton(text='Отмена ❌')])
     
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
@@ -70,6 +72,12 @@ reply_menu_keyboard = get_reply_keyboard(
         'Протоколы 🗂️',
         'FAQ ❔',
         'Связатся с менеджером ☎',
-      #  'Назад 🔙',
     )
 )
+reply_doctor_keyboard = get_reply_keyboard(
+    buttons=('Меню 📁', 'Старт нового протокола 📝')
+)
+reply_patient_keyboard = get_reply_keyboard(
+    buttons=('Меню 📁', )
+)
+    

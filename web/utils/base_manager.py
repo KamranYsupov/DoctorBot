@@ -26,7 +26,7 @@ class AsyncBaseManager(models.Manager):
             .prefetch_related(*prefetch_relations)
         )
     
-    @sync_to_async(thread_sensitive=True)
+    @sync_to_async
     def afilter(
         self,
         select_relations: Sequence[str] = [],

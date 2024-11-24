@@ -18,7 +18,7 @@ class TelegramService:
     def __bot_api_url(self):
         return f'{self.api_url}/bot{self.__bot_token}'
         
-    def send_messsage(
+    def send_message(
         self,
         chat_id: int,
         text: str,
@@ -46,4 +46,28 @@ class TelegramService:
 
         
 telegram_service = TelegramService()
+
+
+def send_message_until_success(
+    chat_id: int,
+    text: str,
+    reply_markup: dict[str, list] | None = None,
+    parse_mode: str = 'HTML',
+) -> int:
+    status_code = 1
+    
+    while status_code != 200:
+        try:
+            response = telegram_service.send_message(
+            chat_id=chat_id,
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode
+            )
+        except requests.exceptions.ConnectTimeout:
+            continue
+        
+        status_code = response.status_code
+    
+    return status_code
 

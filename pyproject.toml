@@ -15,10 +15,12 @@ dependency-injector = "^4.43.0"
 pydantic = "^2.9.2"
 aiohttp = "3.9"
 requests = "^2.32.3"
-celery = "^5.4.0"
+celery = {extras = ["async"], version = "^5.4.0"}
 redis = "^5.2.0"
 gevent = "^24.11.1"
 flower = "^2.0.1"
+gunicorn = "^23.0.0"
+psycopg2-binary = "^2.9.10"
 
 
 [build-system]

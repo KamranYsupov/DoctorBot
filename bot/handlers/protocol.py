@@ -6,8 +6,10 @@ from aiogram import types, F, Router
 from aiogram.filters import StateFilter, Command, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from aiogram.exceptions import TelegramBadRequest
 from asgiref.sync import sync_to_async
 from django.utils import timezone
+from django.conf import settings
 
 from core import config
 from keyboards.inline import get_inline_keyboard
@@ -19,8 +21,14 @@ from keyboards.reply import (
 )
 from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
-from utils.validators import get_integer_from_string
+from utils.validators import (
+    valdate_string_from_message,
+    valdate_first_take_from_message,
+    valdate_period_from_message,
+    valdate_time_to_take_from_message,
+)
 from utils.protocol import get_timedelta_calendar
+from utils.message import default_process_time_to_take_message
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
 from .state import CreateProtocolState
@@ -36,11 +44,12 @@ async def start_protocol_handler(message: types.Message, state: FSMContext):
     
 @router.message(CreateProtocolState.patient_name, F.text)
 async def process_patient_name(message: types.Message, state: FSMContext):
-    patient_name = message.text
-    if len(patient_name) > 150:
-        return await message.answer(
-            'Длина имени не должна превышать 150 символов'
-        )
+    patient_name = await valdate_string_from_message(
+        message,
+        max_length=150,
+    )
+    if not patient_name:
+        return 
     
     await state.update_data(patient_name=patient_name)
     await message.answer('Введите название препарата') 
@@ -50,11 +59,12 @@ async def process_patient_name(message: types.Message, state: FSMContext):
 
 @router.message(CreateProtocolState.drugs, F.text)
 async def process_drug_name(message: types.Message, state: FSMContext):
-    drug_name = message.text
-    if len(drug_name) > 150:
-        return await message.answer(
-            'Длина название препарата не должна превышать 150 символов'
-        )
+    drug_name = await valdate_string_from_message(
+        message,
+        max_length=150,
+    )
+    if not drug_name:
+        return 
     
     state_data = await state.get_data()
     drugs = state_data.get('drugs')
@@ -79,21 +89,9 @@ async def process_drug_name(message: types.Message, state: FSMContext):
 
 @router.message(CreateProtocolState.first_take, F.text)
 async def process_first_take(message: types.Message, state: FSMContext):
-    now = timezone.now()
-    year = now.year
-    month = now.month
-    day = get_integer_from_string(message.text)
-    
-    days_count = calendar.monthrange(year, month)[1]
-    
-    if not day or day > days_count:
-        return await message.answer('Выберите число текущего месяца')
-    if day < now.day:
-        return await message.answer('Нельзя выбирать прошедшие числа')
-    #if day == now.day:
-    #    return await message.answer('Нельзя выбирать текущую дату')
-    
-    first_take = date(year, month, day)
+    first_take = await valdate_first_take_from_message(message)
+    if not first_take:
+        return 
     
     await state.update_data(first_take=first_take)
     await message.answer(
@@ -105,19 +103,14 @@ async def process_first_take(message: types.Message, state: FSMContext):
     
 @router.message(CreateProtocolState.period, F.text)
 async def process_period(message: types.Message, state: FSMContext):
-    period = get_integer_from_string(message.text)
+    period = await valdate_period_from_message(message)
     if not period:
-        await message.answer('Пожалуйста, введите корректное количество дней приёма')
-        return
-    if period > 365:
-        await message.answer('Длительность приёма не должна превышать 365 дней')
-        return
+        return 
     
     await state.update_data(period=period)
     await message.answer(
-        'В какое время нужно принемать лекарства?\n\n'
-        'Отправь сообщение в формате <em><b>{час}:{минута}</b></em>.\n'
-        '<b>Пример:</b> <b><em>12:35</em></b>',
+        'В какое время нужно принемать препараты?\n\n'\
+         + default_process_time_to_take_message,
         parse_mode='HTML',
     ) 
     await state.set_state(CreateProtocolState.time_to_take)
@@ -126,11 +119,8 @@ async def process_period(message: types.Message, state: FSMContext):
 
 @router.message(CreateProtocolState.time_to_take, F.text)
 async def process_time_to_take(message: types.Message, state: FSMContext):
-    try:
-        hour, minute = message.text.split(':')
-        time_to_take = (time(int(hour), int(minute)))
-    except ValueError or TypeError:
-        await message.answer('Некорректный формат ввода')
+    time_to_take = await valdate_time_to_take_from_message(message) 
+    if not time_to_take:
         return 
     
     await state.update_data(time_to_take=time_to_take)
@@ -142,6 +132,7 @@ async def create_protocol_handler(callback: types.CallbackQuery, state: FSMConte
     protocol_data = await state.get_data()
     doctor = await Doctor.objects.aget(telegram_id=callback.from_user.id)
     protocol_data['doctor_id'] = doctor.id
+    
     first_take = protocol_data['first_take']
     period = protocol_data['period']
     
@@ -195,12 +186,38 @@ async def send_finish_protocol_message(
 async def complete_protocol(callback: types.CallbackQuery):
     protocol_id = int(callback.data.split('_')[-1])
     now = timezone.now()
-    current_date = now.date()
+    current_date_strformat = now.strftime('%d.%m.%Y')
     
     protocol = await Protocol.objects.aget(id=protocol_id)
-    protocol.reception_calendar.update({current_date.strftime('%d.%m.%Y'): True})
-    await sync_to_async(protocol.save)()
+    drugs_taken = protocol.reception_calendar.get(current_date_strformat)
     
-    await callback.message.edit_text('Прием выполнен ✅')
+    time_to_take = timezone.make_aware(
+        timezone.datetime.combine(
+            now.date(),
+            protocol.time_to_take
+        )
+    )
+        
+    if now > time_to_take + timedelta(
+        minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
+    ) and not drugs_taken:
+        await callback.message.edit_text('Вы пропустили приём.')
+        return 
+    
+    if not drugs_taken:
+        protocol.reception_calendar.update({current_date_strformat: True})
+        await sync_to_async(protocol.save)()
+    
+        await callback.message.edit_text('Приём выполнен ✅')
+        return 
+       
+    try:
+        await callback.message.delete()
+    except TelegramBadRequest:
+        pass
+   
+ 
+    
+    
     
     

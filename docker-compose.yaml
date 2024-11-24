@@ -1,31 +1,30 @@
-version: '3.8'
+version: '3.3'
 
-x-function: &python
-  build:
-      context: .
-      dockerfile: app.dockerfile
+x-function: &base_python
   volumes:
-    - poetry-volume:/opt/poetry:delegated
+    - ./:/app/:rw  
+    - poetry-volume:/poetry:delegated
   environment: &env-vars
-    POETRY_HOME: /opt/poetry
+    POETRY_HOME: /poetry
+    PYTHONPATH: /app
     DB_HOST: ${DB_HOST}
     DB_NAME: ${DB_NAME}
     DB_USER: ${DB_USER}
     DB_PASS: ${DB_PASSWORD}
+  depends_on:
+    - db
+    - redis
+  env_file:
+    - .env
   networks:
     - internal
-  depends_on:
-    - app_db
-  env_file:
-    .env
 
 services:
-
-  app_db:
+  db:
     container_name: ${PROJECT_NAME}_db
-    image: postgres:11
+    image: postgres:14.6-alpine
     volumes:
-      - app_db-template:/var/lib/postgresql/data/pgdata:rw
+      - pg_data:/var/lib/postgresql/data/pgdata:rw
     env_file:
       - .env
     networks:
@@ -33,68 +32,101 @@ services:
     ports:
       - "${DB_PORT}:${DB_PORT}"
     environment:
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: trust
       PGDATA: /var/lib/postgresql/data/pgdata
 
+  nginx:
+    build: ./nginx
+    container_name: ${PROJECT_NAME}_nginx
+    volumes:
+      - static_dir:/app/web/static/  
+      - media_dir:/app/web/media/ 
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - internal
+
   web:
-    <<: *python
+    <<: *base_python
+    build:
+      context: .
+      dockerfile: web.dockerfile
     container_name: ${PROJECT_NAME}_web
     volumes:
-    - ./web:/web:rw
-    command: >
-      sh -c "
-      python manage.py migrate --noinput
-      python manage.py runserver"
+      - static_dir:/app/web/static/  
+      - media_dir:/app/web/media/ 
 
   bot:
-    <<: *python
+    <<: *base_python
+    build:
+      context: .
+      dockerfile: bot.dockerfile
     container_name: ${PROJECT_NAME}_bot
-    volumes:
-    - ./bot:/bot:rw
-    command: >
-      sh -c "python bot.main.py"
+    command: python bot/main.py
 
   redis:
     image: redis:7.0.11-alpine
     hostname: redis
+    volumes:
+      - redis_data:/data
     ports:
-      - '6379:6379'
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - internal
+    env_file:
+      - .env
+    restart: always
 
   worker:
+    <<: *base_python
+    build:
+      context: .
+      dockerfile: web.dockerfile
     hostname: worker
     entrypoint: celery
-    volumes:
-      - ./:/
-
     command: >
-       -A web.core.celery worker -l info -P gevent
+      -A web.core.celery worker -l info -P gevent
     links:
       - redis
-    depends_on:
-      - app_db
+    restart: always
+
+  beat:
+    <<: *base_python
+    build:
+      context: .
+      dockerfile: web.dockerfile
+    hostname: beat
+    entrypoint: celery
+    command: -A web.core.celery beat -l debug
+    links:
       - redis
+    restart: always
 
   flower:
+    <<: *base_python
+    build:
+      context: .
+      dockerfile: web.dockerfile
     hostname: flower
     entrypoint: celery
     command: -A web.core.celery flower -P gevent
-    volumes:
-      - ./:/
     links:
       - redis
-    depends_on:
-      - app_db
-      - worker
-      - redis
     ports:
-      - '5555:5555'
-
+      - "5555:5555"
+    restart: always
 
 volumes:
-  app_db-template:
-  poetry-volume:
+  static_dir:
+  media_dir:
+  pg_data:
+  redis_data:
+  poetry-volume:                 
 
 networks:
   internal:

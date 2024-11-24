@@ -1,6 +1,7 @@
 import os
 
 from celery import Celery
+from . import settings 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web.core.settings')
 
@@ -12,8 +13,8 @@ app.conf.timezone = 'Europe/Moscow'
 
 app.conf.beat_schedule = {
     'schedule-notifications': {
-        'task': 'web.protocols.tasks.schedule_notifications',
-        'schedule': 60.0, 
+        'task': 'web.protocols.tasks.set_notifications',
+        'schedule': settings.SET_NOTIFICATIONS_SCHEDULE, 
     },
 
 }

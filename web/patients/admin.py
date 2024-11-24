@@ -3,4 +3,12 @@ from django.contrib import admin
 from .models import Patient
 
 
-admin.site.register(Patient)
+@admin.register(Patient)
+class PatientAdmin(admin.ModelAdmin):
+    """Админ-панель для управления пациентами"""
+    list_display = ('name',  'username', 'telegram_id',)
+    search_fields = (
+        'telegram_id', 
+        'username__iregex', 
+        'name__iregex',
+    )

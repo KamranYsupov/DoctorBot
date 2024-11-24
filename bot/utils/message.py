@@ -15,3 +15,10 @@ def get_protocol_info_message(protocol: Protocol) -> str:
     
     
     return message_info
+
+
+default_process_time_to_take_message = (
+    'Отправьте сообщение в формате <em><b>{час}:{минута}</b></em>.\n'
+    '<b>Пример:</b> <b><em>12:35</em></b>\n\n'
+    '<b>Важно! Время должно быть в МСК</b>'
+)
