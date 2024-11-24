@@ -42,4 +42,4 @@ class AsyncBaseManager(models.Manager):
     
     @sync_to_async
     def aget_or_create(self, defaults: Dict = {}, **kwargs):
-        return get_or_create().get_or_create(defaults, **kwargs)
+        return super().get_or_create(defaults, **kwargs)

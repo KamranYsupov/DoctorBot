@@ -107,11 +107,12 @@ def notify_doctor_about_drug_take_miss(protocol_id: int):
             }
         ]]
     
-    reply_markup = {'inline_keyboard': inline_keyboard}
+        reply_markup = {'inline_keyboard': inline_keyboard}
         
         return send_message_until_success(
             chat_id=protocol.doctor.telegram_id,
             text=text,
+            reply_markup=reply_markup
         )
     
 
@@ -126,11 +127,10 @@ def set_notifications():
         patient__isnull=False,
     ).select_related('doctor', 'patient')
     
-    unnotificated_protocols = []
-
-    for protocol in current_protocols:
+    unnotificated_protocols = [
+        protocol for protocol in current_protocols
         if protocol.notifications_calendar.get(current_date_strformat) == False:
-            unnotificated_protocols.append(protocol)
+    ]
             
     for protocol in unnotificated_protocols:
         time_to_take = timezone.make_aware(
@@ -162,7 +162,7 @@ def set_notifications():
                 eta=eta
             )
             
-            if i == 6:
+            if i == settings.REMNDERS_COUNT_AFTER_TIME_TO_TAKE + 1:
                 eta += timedelta(seconds=30)
                 notify_doctor_about_drug_take_miss.apply_async(
                     args=(protocol.id,),
