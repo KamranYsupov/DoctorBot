@@ -25,8 +25,8 @@ class ProtocolAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'telegram_id', 
-        'patient_name__iregex', 
-        'doctor__fio__iregex',
+        'patient_name__icontains', 
+        'doctor__fio__icontains',
     )
     
     @admin.display(description='ФИО доктора',)

@@ -15,13 +15,12 @@ from keyboards.reply import (
 )
 from schemas.doctor import DoctorCreateSchema
 from orm.telegram_user import get_doctor_or_patient
+from utils.patient import register_patient_or_add_protocol
+from utils.protocol import get_protocol_from_state
 from web.doctors.models import Doctor
+from .state import DoctorState, PatientState
 
 router = Router()
-
-
-class DoctorState(StatesGroup):
-    fio = State()
 
 
 async def cancel_handler(
@@ -80,7 +79,7 @@ async def cancel_message_handler(
 
 
 @router.message(DoctorState.fio, F.text)
-async def process_fio(message: types.Message, state: FSMContext):
+async def register_doctor(message: types.Message, state: FSMContext):
     fio = message.text
     if len(fio) > 150:
         return await message.answer('Длина не должна превышать 150 символов')
@@ -97,6 +96,22 @@ async def process_fio(message: types.Message, state: FSMContext):
             buttons=('Меню 📁', 'Старт нового протокола 📝')
         )
     )
+    
+    await state.clear()
+    
+    
+@router.message(PatientState.phone_number, F.contact)
+async def register_patient(
+    message: types.Message,
+    state: FSMContext
+):
+    protocol = await get_protocol_from_state(state) 
+    await register_patient_or_add_protocol(
+        message=message,
+        protocol=protocol,
+        phone_number=message.contact.phone_number
+    )
+        
     
     await state.clear()
     

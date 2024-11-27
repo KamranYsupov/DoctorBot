@@ -4,7 +4,8 @@ from .telegram_user import TelegramUserBaseSchema
 
 
 class PatientBaseSchema(TelegramUserBaseSchema):
-    name: str 
+    name: str
+    phone_number: str 
     
     
 class PatientSchema(PatientBaseSchema):

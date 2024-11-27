@@ -6,6 +6,11 @@ from web.utils.model_mixins import AbstractTelegramUser
 
 class Patient(AbstractTelegramUser):
     name = models.CharField(_('Имя'), max_length=150)
+    phone_number = models.CharField(
+        _('Номер телефона'),
+        max_length=50,
+        unique=True,
+    )
     
     class Meta:
         verbose_name = _('Пациент')

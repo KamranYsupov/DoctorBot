@@ -6,9 +6,10 @@ from .models import Patient
 @admin.register(Patient)
 class PatientAdmin(admin.ModelAdmin):
     """Админ-панель для управления пациентами"""
-    list_display = ('name',  'username', 'telegram_id',)
+    list_display = ('name',  'username', 'telegram_id', 'phone_number')
     search_fields = (
         'telegram_id', 
-        'username__iregex', 
-        'name__iregex',
+        'username__icontains', 
+        'name__icontains',
+        'phone_number'
     )
