@@ -74,6 +74,7 @@ services:
   redis:
     image: redis:7.0.11-alpine
     hostname: redis
+    container_name: ${PROJECT_NAME}_redis
     volumes:
       - redis_data:/data
     ports:
@@ -90,6 +91,7 @@ services:
       context: .
       dockerfile: web.dockerfile
     hostname: worker
+    container_name: ${PROJECT_NAME}_worker
     entrypoint: celery
     command: >
       -A web.core.celery worker -l info -P gevent
@@ -103,6 +105,7 @@ services:
       context: .
       dockerfile: web.dockerfile
     hostname: beat
+    container_name: ${PROJECT_NAME}_beat
     entrypoint: celery
     command: -A web.core.celery beat -l debug
     links:
@@ -115,6 +118,7 @@ services:
       context: .
       dockerfile: web.dockerfile
     hostname: flower
+    container_name: ${PROJECT_NAME}_flower
     entrypoint: celery
     command: -A web.core.celery flower -P gevent
     links:
