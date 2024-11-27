@@ -46,6 +46,19 @@ async def menu_handler(callback: types.CallbackQuery):
         reply_markup=get_menu_keyboard()
     )
     
+
+@router.callback_query(F.data == 'faq')
+async def faq_callback_handler(callback: types.CallbackQuery):
+    with open('FAQ.txt', 'r', encoding='utf-8') as file:
+        message_text = file.read()
+        
+    await callback.message.edit_text(
+        text=message_text,
+        reply_markup=get_inline_keyboard(
+            buttons={'Назад 🔙': 'menu'}, 
+        ),
+    )
+     
     
 async def protocols_menu_handler(
     message: types.Message,
