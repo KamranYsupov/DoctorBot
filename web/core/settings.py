@@ -44,10 +44,10 @@ INSTALLED_APPS = [
     # Библиотеки
     
     # Приложения
-    'web.doctors',
-    'web.patients',
-    'web.protocols',
-    'web.drugs',
+    'web.apps.doctors',
+    'web.apps.patients',
+    'web.apps.protocols',
+    'web.apps.drugs',
 ]
 
 MIDDLEWARE = [
@@ -86,8 +86,12 @@ WSGI_APPLICATION = 'web.core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': os.environ.get('DB_PASS'),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': os.environ.get('DB_PORT', 5432),
     }
 }
 
@@ -151,9 +155,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 TELEGRAM_API_URL = 'https://api.telegram.org'
 
-SET_NOTIFICATIONS_SCHEDULE = 30.0 # 5 минут
-SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE = (5, 2, 1)
-SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE = 1
+SET_NOTIFICATIONS_SCHEDULE = 300.0 # 5 минут
+SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE = (15, 5, 1)
+SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE = 5 # Каждые 5 минут после времени приёма
 
 REMNDERS_COUNT_AFTER_TIME_TO_TAKE = 3
 PROTOCOL_DRUGS_TAKE_INTERVAL = SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE * REMNDERS_COUNT_AFTER_TIME_TO_TAKE # 15 минут после time_to_take

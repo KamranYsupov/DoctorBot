@@ -1,8 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from web.utils.db.base_manager import AsyncBaseManager
-from web.utils.db.model_mixins import AsyncBaseModel
+from web.db.base_manager import AsyncBaseManager
+from web.db.model_mixins import AsyncBaseModel
 
 
 class Drug(AsyncBaseModel):

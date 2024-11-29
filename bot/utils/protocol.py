@@ -3,10 +3,8 @@ from datetime import datetime, timedelta
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
 
-from web.protocols.models import Protocol
 from keyboards.inline import get_inline_keyboard
-from web.doctors.models import Doctor
-from web.patients.models import Patient
+from models import Patient, Doctor, Protocol
 
 
 def get_timedelta_calendar(first_take: datetime, period: int) -> dict:    

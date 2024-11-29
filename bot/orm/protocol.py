@@ -6,9 +6,7 @@ from django.db import transaction
 from ulid import ULID
 
 from schemas.protocol import ProtocolCreateSchema
-from web.protocols.models import Protocol
-from web.patients.models import Patient
-from web.drugs.models import Drug
+from models import Patient, Drug, Protocol
 
 
 @sync_to_async

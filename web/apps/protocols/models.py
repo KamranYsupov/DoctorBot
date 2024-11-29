@@ -3,8 +3,8 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from web.utils.db.base_manager import AsyncBaseManager
-from web.utils.db.model_mixins import AsyncBaseModel, TimestampMixin
+from web.db.base_manager import AsyncBaseManager
+from web.db.model_mixins import AsyncBaseModel, TimestampMixin
 
 
 class Protocol(AsyncBaseModel, TimestampMixin):
@@ -42,7 +42,7 @@ class Protocol(AsyncBaseModel, TimestampMixin):
     class Meta:
         verbose_name = _('Протокол')
         verbose_name_plural = _('Протоколы')
-        ordering = ['created_at']
+        ordering = ['-created_at']
 
     def __str__(self):
         return f'ID {self.id} | {self.patient_name}'

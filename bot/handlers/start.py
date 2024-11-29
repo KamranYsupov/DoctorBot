@@ -18,9 +18,7 @@ from keyboards.reply import (
 from orm.patient import get_or_create_patient_and_update_protocol
 from orm.telegram_user import get_doctor_or_patient
 from utils.patient import register_patient_or_add_protocol
-from web.protocols.models import Protocol
-from web.patients.models import Patient
-from web.doctors.models import Doctor
+from models import Patient, Doctor, Protocol
 
 router = Router()
 

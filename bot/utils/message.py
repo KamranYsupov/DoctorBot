@@ -2,8 +2,7 @@ from core import config
 
 from asgiref.sync import sync_to_async
 
-from web.protocols.models import Protocol
-from web.drugs.models import Drug
+from models import Drug, Protocol
 
 
 def get_drug_info_message(drug: Drug) -> str:

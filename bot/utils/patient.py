@@ -6,7 +6,7 @@ from keyboards.reply import (
     get_reply_keyboard,
     reply_patient_keyboard,
 )
-from web.protocols.models import Protocol
+from models import Protocol
 
 
 async def register_patient_or_add_protocol(

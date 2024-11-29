@@ -8,7 +8,7 @@ from django.conf import settings
 from asgiref.sync import sync_to_async
 
 from .models import Drug
-from web.utils.services.telegram_service import (
+from web.services.telegram_service import (
     telegram_service,
     send_message_until_success,
 )
@@ -115,7 +115,7 @@ def notify_doctor_about_drug_take_miss(drug_id: str):
         inline_keyboard = [[
             {
                 'text': 'Постотреть протокол 🔎',
-                'callback_data': f'protocol_1_{protocol.id}'
+                'callback_data': f'prcl_{protocol.id}_1'
             }
         ]]
     

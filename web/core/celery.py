@@ -13,7 +13,7 @@ app.conf.timezone = 'Europe/Moscow'
 
 app.conf.beat_schedule = {
     'schedule-notifications': {
-        'task': 'web.drugs.tasks.set_notifications',
+        'task': 'web.apps.drugs.tasks.set_notifications',
         'schedule': settings.SET_NOTIFICATIONS_SCHEDULE, 
     },
 

@@ -28,11 +28,7 @@ from utils.message import (
     get_protocol_info_message,
     get_drug_info_message,
 )
-from web.patients.models import Patient
-from web.doctors.models import Doctor
-from web.protocols.models import Protocol
-from web.drugs.models import Drug
-
+from models import Patient, Drug, Doctor, Protocol
 
 router = Router()
     
@@ -228,6 +224,7 @@ async def patient_protocols_callback_handler(callback: types.CallbackQuery):
         ),
         parse_mode='HTML'
     )
+
 
 @router.callback_query(F.data.startswith('prcl_'))
 async def protocol_callback_handler(callback: types.CallbackQuery):

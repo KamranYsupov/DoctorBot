@@ -34,10 +34,7 @@ from orm.protocol import create_protocol_and_set_drugs, get_patient_uild
 from schemas.drug import DrugCreateSchema
 from utils.protocol import get_timedelta_calendar 
 from utils.message import default_process_time_to_take_message
-from web.doctors.models import Doctor
-from web.protocols.models import Protocol
-from web.drugs.models import Drug
-
+from models import Drug, Doctor, Protocol
 from .state import CreateProtocolState
 
 router = Router()

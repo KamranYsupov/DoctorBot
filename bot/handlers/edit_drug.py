@@ -38,9 +38,7 @@ from utils.protocol import (
     send_edit_protocol_notification_to_patient
 )
 from utils.message import default_process_time_to_take_message
-from web.doctors.models import Doctor
-from web.protocols.models import Protocol
-from web.drugs.models import Drug
+from models import Drug, Doctor, Protocol
 from .state import EditDrugState
 
 router = Router()

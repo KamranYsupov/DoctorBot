@@ -5,9 +5,7 @@ from asgiref.sync import sync_to_async
 from django.db import transaction
 
 from schemas.patient import PatientCreateSchema
-from web.protocols.models import Protocol
-from web.patients.models import Patient
-from web.doctors.models import Doctor
+from models import Patient, Doctor, Protocol
 
 
 @sync_to_async

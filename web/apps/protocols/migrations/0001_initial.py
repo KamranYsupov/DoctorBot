@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import web.utils.db.model_mixins
+import web.db.model_mixins
 
 
 class Migration(migrations.Migration):
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Protocol',
             fields=[
-                ('id', models.CharField(db_index=True, default=web.utils.db.model_mixins.ulid_default, editable=False, max_length=26, primary_key=True, serialize=False, unique=True)),
+                ('id', models.CharField(db_index=True, default=web.db.model_mixins.ulid_default, editable=False, max_length=26, primary_key=True, serialize=False, unique=True)),
                 ('patient_name', models.CharField(max_length=150, verbose_name='ФИО пациента')),
                 ('patient_ulid', models.CharField(db_index=True, max_length=26)),
                 ('doctor', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='protocols', to='doctors.doctor', verbose_name='Доктор')),

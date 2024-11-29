@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from core import config
 from schemas.drug import DrugCreateSchema
-from web.drugs.models import Drug
+from models import Drug
 
 
 def get_integer_from_string(string: str) -> Optional[int]:
@@ -28,10 +28,6 @@ async def validate_drugs(
     drugs: List[DrugCreateSchema],
     drug_obj: Union[DrugCreateSchema, Drug]
 ) -> Union[DrugCreateSchema, Drug, None]:
-    
-    if len(drugs) == 1:
-        return drug_obj
-    
     ununique_drugs = list(
         filter(
             (lambda drug: drug.name == drug_obj.name

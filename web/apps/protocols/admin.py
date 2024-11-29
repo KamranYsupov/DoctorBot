@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from web.drugs.models import Drug
+from web.apps.drugs.models import Drug
 from .models import Protocol
 
 
