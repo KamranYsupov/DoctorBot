@@ -17,7 +17,7 @@ from schemas.doctor import DoctorCreateSchema
 from orm.telegram_user import get_doctor_or_patient
 from utils.patient import register_patient_or_add_protocol
 from web.doctors.models import Doctor
-from web.doctors.protocol import Protocol
+from web.protocol.models import Protocol
 from .state import DoctorState, PatientState
 
 router = Router()
