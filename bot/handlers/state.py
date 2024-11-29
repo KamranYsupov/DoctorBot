@@ -12,10 +12,12 @@ class PatientState(StatesGroup):
 
 class CreateProtocolState(StatesGroup):
     patient_name = State()
-    drugs = State()
+    drug_name = State()
     first_take = State()
     period = State()
     time_to_take = State()
+    
+    drugs = State()
     
 
 class EditProtocolState(StatesGroup):
