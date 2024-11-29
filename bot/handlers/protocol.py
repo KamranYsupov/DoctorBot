@@ -230,24 +230,26 @@ async def complete_drug(callback: types.CallbackQuery):
             drug.time_to_take
         )
     )
+    
+    if is_taken:
+        try:
+            await callback.message.delete()
+        except TelegramBadRequest:
+            pass
         
-    if now > time_to_take + timedelta(
+    if now > time_to_take and now < time_to_take + timedelta(
         minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
-    ) and not is_taken:
-        await callback.message.edit_text('Вы пропустили приём.')
-        return 
-    
-    if not is_taken:
+    ):
         drug.reception_calendar.update({current_date_strformat: True})
-        await drug.asave()
-    
+        await drug.asave() 
+        
         await callback.message.edit_text('Приём выполнен ✅')
         return 
+    
+    await callback.message.edit_text('Вы пропустили приём.')
+    
        
-    try:
-        await callback.message.delete()
-    except TelegramBadRequest:
-        pass
+    
    
  
     
