@@ -10,8 +10,6 @@ class ProtocolAdmin(admin.ModelAdmin):
         'id',
         'patient_name',
         'doctor_fio',
-        'time_to_take',
-        'period',
     )
     list_display_links = (
         'id',
@@ -19,12 +17,7 @@ class ProtocolAdmin(admin.ModelAdmin):
         'doctor_fio',
     )
     readonly_fields = ('patient_name', )
-    excluded_fields = (
-        'reception_calendar',
-        'notifications_calendar'
-    )
     search_fields = (
-        'telegram_id', 
         'patient_name__icontains', 
         'doctor__fio__icontains',
     )
@@ -37,11 +30,5 @@ class ProtocolAdmin(admin.ModelAdmin):
         if obj:
             return self.readonly_fields
         return []
-    
 
-    
-    def get_exclude(self, request, obj=None):
-        if obj:
-            return self.excluded_fields
-        return ()
 
