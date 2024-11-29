@@ -11,7 +11,7 @@ class SMSCService:
         self.login = login
         self.__psw = psw
         
-    def create_call(self, phone: str, message: str) -> str:
+    def create_call(self, phone: str, message: str):
         params = {
             'login': self.login,
             'psw': self.__psw,
@@ -25,7 +25,7 @@ class SMSCService:
             params=params
         )
 
-        return response.text
+        return response
     
       
         

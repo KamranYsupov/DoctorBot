@@ -9,11 +9,9 @@ from asgiref.sync import sync_to_async
 
 from .models import Drug
 from .service import get_unnotificated_drugs
-from web.services.telegram_service import (
-    telegram_service,
-    send_message_until_success,
-)
+from web.services.telegram_service import telegram_service
 from web.services.smsc_service import smsc_service 
+from web.utils.requests import send_request_until_success
 
 
 @shared_task(ignore_result=True)
@@ -55,11 +53,15 @@ def send_reminder_before_time_to_take(
     
         reply_markup = {'inline_keyboard': inline_keyboard}
 
-    return send_message_until_success(
-        chat_id=telegram_id,
-        text=text,
-        reply_markup=reply_markup,
+    response = send_request_until_success(
+        telegram_service.send_message(
+            chat_id=telegram_id,
+            text=text,
+            reply_markup=reply_markup,
+        )
     )
+    
+    return response.status_code
     
     
 @shared_task(ignore_result=True)
@@ -76,10 +78,14 @@ def call_patient_before_time_to_take(drug_id: str):
     if drug.reception_calendar.get(current_date_strformat):
         return 
 
-    return smsc_service.create_call(
-        phone=drug.protocol.patient.phone_number,
-        message=settings.CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE, 
+    response = send_request_until_success(
+        smsc_service.create_call(
+            phone=drug.protocol.patient.phone_number,
+            message=settings.CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE, 
+        )
     )
+    
+    return response.status_code
 
 
 @shared_task(ignore_result=True)
@@ -102,10 +108,14 @@ def send_reminder_after_time_to_take(drug_id: str):
         f'Напоминаем, что пора принять <b><em>{drug.name}</em></b>'
     )
         
-    return send_message_until_success(
-        chat_id=telegram_id,
-        text=text,
+    response = send_request_until_success(
+        telegram_service.send_message(
+            chat_id=telegram_id,
+            text=text,
+        )
     )
+    
+    return response.status_code
     
 
 @shared_task(ignore_result=True)
@@ -145,11 +155,15 @@ def notify_doctor_about_drug_take_miss(drug_id: str):
     
     reply_markup = {'inline_keyboard': inline_keyboard}
         
-    return send_message_until_success(
-        chat_id=protocol.doctor.telegram_id,
-        text=text,
-        reply_markup=reply_markup
-    ) 
+    response = send_request_until_success(
+        telegram_service.send_message(
+            chat_id=protocol.doctor.telegram_id,
+            text=text,
+            reply_markup=reply_markup
+        ) 
+    )
+    
+    return response.status_code
             
         
 @shared_task(ignore_result=True)
@@ -197,7 +211,7 @@ def set_before_time_to_take_tasks(
         if minutes_before == settings.SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE[-1]:
             call_patient_before_time_to_take.apply_async(
                 args=(drug.id,),
-                eta=eta
+                eta=eta + timedelta(seconds=20)
             )
             send_reminder_kwargs['add_complete_take_button'] = True
             is_complete_take_button_sent = True
