@@ -47,6 +47,7 @@ class Drug(models.Model):
     class Meta:
         verbose_name = _('Препарат')
         verbose_name_plural = _('Препараты')
+        ordering = ['time_to_take']
 
     def __str__(self):
         return self.name
