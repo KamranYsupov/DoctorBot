@@ -61,6 +61,9 @@ async def valdate_first_take_from_message(message: types.Message) -> Optional[da
     if day < now.day:
         await message.answer('Нельзя выбирать прошедшие числа')
         return
+    if day == now.day:
+        await message.answer('Нельзя выбирать текущую дату')
+        return
     
     first_take = date(year, month, day)
     
