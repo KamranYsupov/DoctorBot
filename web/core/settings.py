@@ -168,4 +168,7 @@ PROTOCOL_DRUGS_TAKE_INTERVAL = (
 SMSC_LOGIN = os.getenv('SMSC_LOGIN')
 SMSC_PASSWORD = os.getenv('SMSC_PASSWORD')
 SMSC_CREATE_CALL_URL = 'https://smsc.ru/sys/send.php'
-CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE = 'Привет! Это тестовое сообщение!'
+CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE =  (
+    'Здравствуйте,  {patient}.'
+    'доктор {doctor} напоминает о приеме препарата.'
+)

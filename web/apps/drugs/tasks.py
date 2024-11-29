@@ -77,11 +77,20 @@ def call_patient_before_time_to_take(drug_id: str):
 
     if drug.reception_calendar.get(current_date_strformat):
         return 
-
+    
+    patient = drug.protocol.patient
+    doctor = drug.protocol.doctor
+    call_message = (
+        settings.CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE.format(
+            patient=patient.name,
+            doctor=doctor.fio
+        )
+    )
+    
     response = send_request_until_success(
         smsc_service.create_call(
-            phone=drug.protocol.patient.phone_number,
-            message=settings.CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE, 
+            phone=patient.phone_number,
+            message=call_message, 
         )
     )
     
