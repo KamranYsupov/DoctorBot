@@ -4,51 +4,9 @@ from django.utils.translation import gettext_lazy as _
 from web.utils.base_manager import AsyncBaseManager
 
 
-class Drug(models.Model):
-    first_take = models.DateField(
-        _('День первого приема'),
-        auto_now=False,
-        auto_now_add=False
-    )
-    last_take = models.DateField(
-        _('День последнего приема'),
-        db_index=True,
-        auto_now=False,
-        auto_now_add=False
-    )
-    time_to_take = models.TimeField(
-        _('Время приема'),
-        auto_now=False,
-        auto_now_add=False
-    )
-    reception_calendar = models.JSONField(
-        _('Календарь према препаратов'),
-        default=dict
-    )
-    notifications_calendar = models.JSONField(
-        _('Календарь для проверки отправки уведомлений'),
-        default=dict
-    )
-
-    objects = AsyncBaseManager()
-
-    class Meta:
-        verbose_name = _('Препарат')
-        verbose_name_plural = _('Препараты')
-
-    def __str__(self):
-        return self.name
-    
-    @property
-    def period(self) -> int:
-        delta = self.last_take - self.first_take
-        
-        return delta.days
-
-
 class Protocol(models.Model):
     drugs = models.ManyToManyField(
-        Drug, 
+        'drugs.Drug', 
         related_name='protocols',
         verbose_name=_('Препараты'), 
     )
