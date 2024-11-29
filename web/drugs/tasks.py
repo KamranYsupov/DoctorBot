@@ -105,9 +105,7 @@ def notify_doctor_about_drug_take_miss(drug_id: int):
         )
     )
 
-    if now > datetime_to_take + timedelta(
-        minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
-    ) and not drug.reception_calendar.get(current_date_strformat):
+    if not drug.reception_calendar.get(current_date_strformat):
         text = (
             f'Пациент {protocol.patient_name} '
             f'пропустил приём <b><em>{drug.name}</em></b> по протоколу ' 
@@ -159,6 +157,8 @@ def set_notifications():
             )
         )       
         
+        is_complete_take_button_sent = False
+        
         for minutes_before in settings.SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE:
             notification_time = datetime_to_take - timedelta(minutes=minutes_before)
             if now > notification_time:
@@ -169,17 +169,23 @@ def set_notifications():
             
             if minutes_before == settings.SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE[-1]:
                 send_reminder_kwargs['add_complete_take_button'] = True
+                is_complete_take_button_sent = True
                 
             send_reminder_before_time_to_take.apply_async(
                 kwargs=send_reminder_kwargs,
                 eta=eta
             )
         
+        drug.notifications_calendar[current_date_strformat] = True
+        
+        if not is_complete_take_button_sent:
+            continue
+        
         for i in range(1, settings.REMNDERS_COUNT_AFTER_TIME_TO_TAKE+1):  # 3 напоминания по 5 минут каждое
             notification_time = datetime_to_take + timedelta(
                 minutes=i * settings.SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE
             ) 
-            if now > notification_time:
+            if now > datetime_to_take:
                 continue
             
             eta = now + timedelta(seconds=(notification_time - now).total_seconds())
@@ -195,7 +201,7 @@ def set_notifications():
                     eta=eta
                 )
             
-        drug.notifications_calendar[current_date_strformat] = True
+        
     
     if unnotificated_drugs:
         Drug.objects.bulk_update(unnotificated_drugs, ['notifications_calendar'])
