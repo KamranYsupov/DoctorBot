@@ -41,7 +41,7 @@ def send_reminder_before_time_to_take(
     else:
         text += f'Осталось <b>{minutes_before} минут</b>'
         
-    text += f' до приема <em>{drug.name}</em>'
+    text += f' до приёма <b><em>{drug.name}</em></b>'
     
     if add_complete_take_button:
         inline_keyboard = [[
@@ -76,7 +76,9 @@ def send_reminder_after_time_to_take(drug_id: int):
     
     telegram_id = drug.protocol.patient.telegram_id
     
-    text = f'Напоминаем, что пора принять <em>{drug.name}</em>'
+    text = (
+        f'Напоминаем, что пора принять <b><em>{drug.name}</em></b>'
+    )
         
     return send_message_until_success(
         chat_id=telegram_id,
@@ -108,7 +110,7 @@ def notify_doctor_about_drug_take_miss(drug_id: int):
     ) and not drug.reception_calendar.get(current_date_strformat):
         text = (
             f'Пациент {protocol.patient_name} '
-            f'пропустил прием {drug.name} по протоколу ' 
+            f'пропустил приём <b><em>{drug.name}</em></b> по протоколу ' 
             f'<b>ID: {protocol.id} | {protocol.patient_name}</b>'
         )
         
