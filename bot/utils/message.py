@@ -1,18 +1,32 @@
+from asgiref.sync import sync_to_async
+
 from web.protocols.models import Protocol
+from web.drugs.models import Drug
 
 
-def get_protocol_info_message(protocol: Protocol) -> str:
-    drugs_string = ', '.join(protocol.drugs)
+def get_drug_info_message(drug: Drug) -> str:
     message_info = (
-    f'<b>Протокол ID:</b> {protocol.id}\n\n'
-    f'<b>Препараты:</b> <em>{drugs_string}</em>\n'
-    f'<b>Дата первого приема:</b> {protocol.first_take}\n' 
-    f'<b>Срок приема: </b>'
-    f'{protocol.first_take.strftime("%d.%m.%Y")} '
-    f'- {protocol.last_take.strftime("%d.%m.%Y")} ({protocol.period} дней)\n' 
-    f'<b>Время приема:</b> {protocol.time_to_take.strftime("%H:%M")}'
+        f'<b>Название:</b> <b>{drug.name}</b>\n'
+        f'<b>Дата первого приема:</b> {drug.first_take.strftime("%d.%m.%Y")}\n' 
+        f'<b>Срок приема: </b>'
+        f'<em>{drug.first_take.strftime("%d.%m.%Y")} '
+        f'- {drug.last_take.strftime("%d.%m.%Y")}</em> ({drug.period} дней)\n' 
+        f'<b>Время приема:</b> {drug.time_to_take.strftime("%H:%M")}'
     )
     
+    return message_info
+
+
+@sync_to_async
+def get_protocol_info_message(protocol: Protocol) -> str:
+    message_info = (
+    f'<b>Протокол ID:</b> {protocol.id}\n\n'
+    f'<b>Препараты:</b>'
+    )
+    
+    for drug in protocol.drugs.all():
+        message_info += '\n\n' 
+        message_info += get_drug_info_message(drug)
     
     return message_info
 

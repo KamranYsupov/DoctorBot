@@ -1,7 +1,7 @@
 from typing import List
 
 from asgiref.sync import sync_to_async
-from django.db.transaction import atomic
+from django.db import transaction
 
 from schemas.protocol import ProtocolCreateSchema
 from web.protocols.models import Protocol
@@ -15,24 +15,16 @@ def create_protocol_and_set_drugs(
 ) -> Protocol:
     protocol_data = schema.model_dump()
     drugs_data = protocol_data.pop('drugs')
-    
-    with atomic():
-        drugs = [
-            Drug(**drug_data) for drug_data in drugs_data
-        ]
-        
-        created_drugs = Drug.objects.bulk_create(drugs) # Обьекты Drug без id
-        refreshed_drugs = Drug.objects.filter( 
-            name__in=[drug.name for drug in created_drugs] 
-        )  # Обновленные обьекты Drug с id
-
-        protocol = Protocol.objects.create(
-            **protocol_data
+    with transaction.atomic():
+        protocol = Protocol.objects.create(**protocol_data)
+        created_drugs = Drug.objects.bulk_create(
+            [
+                Drug(protocol_id=protocol.id, **drug_data) 
+                for drug_data in drugs_data
+            ],
+            batch_size=1000,
         )
-        protocol.drugs.set(refreshed_drugs)
-        
-        protocol.save()
-    
+
     return protocol
 
 

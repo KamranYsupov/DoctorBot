@@ -20,9 +20,9 @@ class CreateProtocolState(StatesGroup):
     drugs = State()
     
 
-class EditProtocolState(StatesGroup):
-    protocol_id = State()
-    drugs = State()
+class EditDrugState(StatesGroup):
+    drug_id = State()
+    name = State()
     first_take = State()
     period = State()
     time_to_take = State()

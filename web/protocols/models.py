@@ -5,11 +5,6 @@ from web.utils.base_manager import AsyncBaseManager
 
 
 class Protocol(models.Model):
-    drugs = models.ManyToManyField(
-        'drugs.Drug', 
-        related_name='protocols',
-        verbose_name=_('Препараты'), 
-    )
     patient_name = models.CharField(
         _('Имя пациента'), 
         db_index=True,

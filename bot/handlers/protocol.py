@@ -141,6 +141,7 @@ async def process_time_to_take(message: types.Message, state: FSMContext):
     return await send_finish_protocol_message(
         message,
         text=f'Препарат <b>{drug_create_schema.name}</b> добавлен!\nВыберите действие',
+        state=state,
     )
             
     
@@ -172,56 +173,66 @@ async def create_protocol_handler(callback: types.CallbackQuery, state: FSMConte
     )
     await state.clear()
     
+   
+async def send_finish_protocol_message(
+    message: types.Message,
+    state: FSMContext,
+    text: str = 'Выберите действие',
+    parse_mode: str = 'HTML',
+):
+    state_data = await state.get_data()
+    drugs = state_data.get('drugs')
+    buttons = {'Создать протокол 🧾': 'create_protocol'}
     
+    if drugs and len(drugs) != config.MAX_DRUG_COUNT_IN_PROTOCOL:
+        buttons.update({'Добавить препарат 💊': 'add_drug'})
+    else:
+        text += (
+            '\n\n'
+            'Вы достигли максимального количества препаратов '
+            f'в протоколе ({config.MAX_DRUG_COUNT_IN_PROTOCOL})'
+        )
+    
+
+    await message.answer(
+        text,
+        reply_markup=get_inline_keyboard(buttons=buttons),
+        parse_mode=parse_mode
+    )
+    
+     
 @router.callback_query(F.data == 'add_drug')
 async def add_drug_handler(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer('Введите название препарата') 
-    await state.set_state(CreateProtocolState.drug_name)
-    
-    
-async def send_finish_protocol_message(
-    message: types.Message,
-    text: str = 'Выберите действие',
-    parse_mode: str = 'HTML'
-):
-    await message.answer(
-        text,
-        reply_markup=get_inline_keyboard(
-            buttons={
-                'Создать протокол 🧾': 'create_protocol',
-                'Добавить препарат 💊': 'add_drug',
-            }
-        ),
-        parse_mode=parse_mode
-    )
+    await state.set_state(CreateProtocolState.drug_name)    
    
     
-@router.callback_query(F.data.startswith('complete_protocol_'))
-async def complete_protocol(callback: types.CallbackQuery):
-    protocol_id = int(callback.data.split('_')[-1])
+@router.callback_query(F.data.startswith('complete_drug_'))
+async def complete_drug(callback: types.CallbackQuery):
+    drug_id = int(callback.data.split('_')[-1])
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
     
-    protocol = await Protocol.objects.aget(id=protocol_id)
-    drugs_taken = protocol.reception_calendar.get(current_date_strformat)
+    drug = await Drug.objects.aget(id=drug_id)
+    is_taken = drug.reception_calendar.get(current_date_strformat)
     
     time_to_take = timezone.make_aware(
         timezone.datetime.combine(
             now.date(),
-            protocol.time_to_take
+            drug.time_to_take
         )
     )
         
     if now > time_to_take + timedelta(
         minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
-    ) and not drugs_taken:
+    ) and not is_taken:
         await callback.message.edit_text('Вы пропустили приём.')
         return 
     
-    if not drugs_taken:
-        protocol.reception_calendar.update({current_date_strformat: True})
-        await protocol.asave()
+    if not is_taken:
+        drug.reception_calendar.update({current_date_strformat: True})
+        await drug.asave()
     
         await callback.message.edit_text('Приём выполнен ✅')
         return 

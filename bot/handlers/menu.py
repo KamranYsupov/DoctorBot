@@ -23,10 +23,15 @@ from orm.telegram_user import get_doctor_or_patient
 from orm.patient import get_patient_doctors 
 from orm.protocol import get_patients_names_by_doctor_id
 from utils.pagination import Paginator, get_pagination_buttons
-from utils.message import get_protocol_info_message
+from utils.message import (
+    get_protocol_info_message,
+    get_drug_info_message,
+)
 from web.patients.models import Patient
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
+from web.drugs.models import Drug
+
 
 router = Router()
     
@@ -157,7 +162,7 @@ async def doctor_protocols_callback_handler(callback: types.CallbackQuery):
     page = paginator.get_page()
     for protocol in page:
         buttons[f'ID: {protocol.id} | {protocol.patient_name}' ] = \
-            f'protocol_{page_number}_{protocol.id}'
+            f'protocol_{protocol.id}_{page_number}'
         
     sizes = (1, ) * len(page)
     pagination_buttons = get_pagination_buttons(
@@ -198,10 +203,10 @@ async def patient_protocols_callback_handler(callback: types.CallbackQuery):
     paginator = Paginator(
         array=protocols,
         page_number=page_number,
-        per_page=3,
+        per_page=1,
     )
     for protocol in paginator.get_page():
-        message_text += get_protocol_info_message(protocol) + '\n\n'
+        message_text += await get_protocol_info_message(protocol) + '\n\n'
         
     sizes = (2, 1)
     buttons.update(
@@ -225,8 +230,8 @@ async def patient_protocols_callback_handler(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith('protocol_'))
 async def protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
-    protocol_id = int(callback_data[-1])
-    page_number = int(callback_data[-2])
+    protocol_id = int(callback_data[-2])
+    page_number = int(callback_data[-1])
     reply_markup = None
     
     protocol = await Protocol.objects.aget(id=protocol_id)
@@ -240,7 +245,7 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
             }        
         )
     
-    message_text = get_protocol_info_message(protocol)
+    message_text = await get_protocol_info_message(protocol)
     
     await callback.message.edit_text(
         message_text,
@@ -250,28 +255,57 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
     
 
 @router.callback_query(F.data.startswith('edit_protocol_'))
-async def protocol_callback_handler(callback: types.CallbackQuery):
+async def edit_protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
     protocol_id = int(callback_data[-2])
     page_number = int(callback_data[-1])
-     
+    buttons = {}
+    message_text = 'Выберите препарат' 
+    
+    protocol = await Protocol.objects.aget(id=protocol_id)  
+    drugs = await sync_to_async(protocol.drugs.all)()
+    
+    async for drug in drugs:
+        buttons[drug.name] = f'edit_drug_{drug.id}_{page_number}'
+        
+    buttons.update({'Назад 🔙': f'protocol_{drug.protocol_id}_{page_number}'})
+    sizes = (1, ) * len(buttons)    
+      
+    await callback.message.edit_text(
+        message_text,
+        reply_markup=get_inline_keyboard(
+            buttons=buttons,
+            sizes=sizes,        
+        ),
+        parse_mode='HTML'
+    )
+    
+    
+@router.callback_query(F.data.startswith('edit_drug_'))
+async def edit_drug_callback_handler(callback: types.CallbackQuery):
+    callback_data = callback.data.split('_')
+    drug_id = int(callback_data[-2])
+    page_number = int(callback_data[-1])
+
     message_text = '<b>Редактирование 📝</b>\n\n'
     
-    protocol = await Protocol.objects.aget(id=protocol_id)
-    message_text += get_protocol_info_message(protocol)
+    drug = await Drug.objects.aget(id=drug_id)
+    message_text += get_drug_info_message(drug)
+    buttons = {
+        'Изменить название 📝': f'edit_drugs_{drug.id}',
+        'Изменить дату первого приёма 📆': f'edit_first_take_{drug.id}',
+        'Изменить срок приёма ⏳': f'edit_period_{drug.id}',
+        'Изменить время приёма ⏰': f'edit_time_to_take_{drug.id}',
+        'Назад 🔙': f'edit_protocol_{drug.protocol_id}_{page_number}'
+    }
     
     await callback.message.edit_text(
         message_text,
         reply_markup=get_inline_keyboard(
-            buttons={
-                'Изменить препараты 📝': f'edit_drugs_{protocol.id}',
-                'Изменить дату первого приёма 📝': f'edit_first_take_{protocol.id}',
-                'Изменить срок приёма 📝': f'edit_period_{protocol.id}',
-                'Изменить время приёма 📝': f'edit_time_to_take_{protocol.id}',
-                'Назад 🔙': f'protocol_{page_number}_{protocol_id}'
-            },
+            buttons=buttons,
             sizes=(1, 1, 1, 1, 1),        
         ),
         parse_mode='HTML'
     )
+    
     

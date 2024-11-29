@@ -34,6 +34,13 @@ class Drug(models.Model):
         _('Календарь для проверки отправки уведомлений'),
         default=dict
     )
+    
+    protocol = models.ForeignKey(
+        'protocols.Protocol',
+        verbose_name=_('Протокол'),
+        related_name='drugs',
+        on_delete=models.CASCADE
+    )
 
     objects = AsyncBaseManager()
 
