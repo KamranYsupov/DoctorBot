@@ -65,7 +65,7 @@ def send_reminder_before_time_to_take(
 @shared_task(ignore_result=True)
 def call_patient_before_time_to_take(drug_id: str):
     """
-    Задача для создании телефоного вызова 
+    Задача для создания телефоного вызова 
     с напоминанием о скором приёме препарата
     """
     
