@@ -7,7 +7,11 @@ from .models import Protocol
 class DrugInline(admin.TabularInline):
     model = Drug
     extra = 1
-
+    exclude = (
+        'reception_calendar',
+        'notifications_calendar'
+    )
+    
 
 @admin.register(Protocol)
 class ProtocolAdmin(admin.ModelAdmin):
