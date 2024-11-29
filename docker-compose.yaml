@@ -129,16 +129,6 @@ services:
     hostname: worker3
     container_name: ${PROJECT_NAME}_worker3
 
-  worker4:
-    <<: *base_worker
-    hostname: worker4
-    container_name: ${PROJECT_NAME}_worker4
-
-  worker5:
-    <<: *base_worker
-    hostname: worker5
-    container_name: ${PROJECT_NAME}_worker5
-
 volumes:
   static_dir:
   media_dir:
