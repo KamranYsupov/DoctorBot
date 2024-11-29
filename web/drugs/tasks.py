@@ -8,7 +8,7 @@ from django.conf import settings
 from asgiref.sync import sync_to_async
 
 from .models import Drug
-from web.utils.telegram_service import (
+from web.utils.services.telegram_service import (
     telegram_service,
     send_message_until_success,
 )
@@ -16,7 +16,7 @@ from web.utils.telegram_service import (
 
 @shared_task(ignore_result=True)
 def send_reminder_before_time_to_take(
-    drug_id: int, 
+    drug_id: str, 
     minutes_before: int,
     add_complete_take_button: bool = False
 ):
@@ -61,7 +61,7 @@ def send_reminder_before_time_to_take(
     
 
 @shared_task(ignore_result=True)
-def send_reminder_after_time_to_take(drug_id: int):
+def send_reminder_after_time_to_take(drug_id: str):
     """
     Задача для уведомления пациента
     о приёме препарата после времени приёма
@@ -87,7 +87,7 @@ def send_reminder_after_time_to_take(drug_id: int):
     
 
 @shared_task(ignore_result=True)
-def notify_doctor_about_drug_take_miss(drug_id: int):
+def notify_doctor_about_drug_take_miss(drug_id: str):
     """
     Задача для уведомления доктора 
     о пропуске приёма препарата пациентом

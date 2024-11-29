@@ -86,12 +86,8 @@ WSGI_APPLICATION = 'web.core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME'),
-        'USER': os.environ.get('DB_USER'),
-        'PASSWORD': os.environ.get('DB_PASS'),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': os.environ.get('DB_PORT', 5432),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3')
     }
 }
 
@@ -140,7 +136,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
 REDIS_DB_CELERY = os.environ.get('REDIS_DB_CELERY', 0)
 REDIS_DB_RESULT_CELERY = os.environ.get('REDIS_DB_RESULT_CELERY', 1)
@@ -155,9 +151,9 @@ CELERY_RESULT_SERIALIZER = 'json'
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 TELEGRAM_API_URL = 'https://api.telegram.org'
 
-SET_NOTIFICATIONS_SCHEDULE = 300.0 # 5 минут
-SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE = (15, 5, 1)
-SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE = 5
+SET_NOTIFICATIONS_SCHEDULE = 30.0 # 5 минут
+SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE = (5, 2, 1)
+SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE = 1
 
 REMNDERS_COUNT_AFTER_TIME_TO_TAKE = 3
 PROTOCOL_DRUGS_TAKE_INTERVAL = SEND_REMINDER_MINUTE_AFTER_TIME_TO_TAKE * REMNDERS_COUNT_AFTER_TIME_TO_TAKE # 15 минут после time_to_take

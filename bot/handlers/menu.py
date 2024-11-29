@@ -1,3 +1,4 @@
+﻿import uuid
 import calendar
 from datetime import datetime, timedelta, date, time
 
@@ -21,7 +22,7 @@ from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
 from orm.telegram_user import get_doctor_or_patient
 from orm.patient import get_patient_doctors 
-from orm.protocol import get_patients_names_by_doctor_id
+from orm.protocol import get_patient_names_and_ulids_by_doctor_id
 from utils.pagination import Paginator, get_pagination_buttons
 from utils.message import (
     get_protocol_info_message,
@@ -84,14 +85,15 @@ async def protocols_menu_handler(
         
     if isinstance(telegram_user, Doctor):
         message_text += 'Выберите пациента'
-        patients_names = await get_patients_names_by_doctor_id(
+        patient_names_and_ulids = \
+            await get_patient_names_and_ulids_by_doctor_id(
             doctor_id=telegram_user.id
         )
-        paginator_data['array'] = patients_names
+        paginator_data['array'] = patient_names_and_ulids
         paginator = Paginator(**paginator_data)
         
-        for patient_name in paginator.get_page():
-            buttons[patient_name] = f'doctor_protocols_{patient_name}_1'
+        for patient_name, patient_ulid in paginator.get_page():
+            buttons[patient_name] = f'doc_p_{patient_ulid}_1'
                 
     elif isinstance(telegram_user, Patient):
         message_text += 'Выберите врача'
@@ -101,7 +103,7 @@ async def protocols_menu_handler(
         paginator = Paginator(**paginator_data)
         
         for doctor in paginator.get_page():
-            buttons[f'Врач: {doctor.fio}'] = f'patient_protocols_{doctor.id}_1'
+            buttons[f'Врач: {doctor.fio}'] = f'pat_p_{doctor.id}_1'
 
     else:
         return
@@ -141,16 +143,16 @@ async def protocols_callback_handler(callback: types.CallbackQuery):
     )
     
     
-@router.callback_query(F.data.startswith('doctor_protocols_'))
+@router.callback_query(F.data.startswith('doc_p_'))
 async def doctor_protocols_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
-    patient_name = callback_data[-2]
+    patient_ulid = callback_data[-2]
     page_number = int(callback_data[-1])
     message_text = 'Выберите протокол'
     buttons = {}
     
     protocols = await Protocol.objects.afilter(
-        patient_name=patient_name,
+        patient_ulid=patient_ulid,
         doctor__telegram_id=callback.from_user.id
     )
     paginator = Paginator(
@@ -161,13 +163,13 @@ async def doctor_protocols_callback_handler(callback: types.CallbackQuery):
     
     page = paginator.get_page()
     for protocol in page:
-        buttons[f'ID: {protocol.id} | {protocol.patient_name}' ] = \
-            f'protocol_{protocol.id}_{page_number}'
+        buttons[f'{protocol.patient_name} | ID: {protocol.id}' ] = \
+            f'prcl_{protocol.id}_{page_number}'
         
     sizes = (1, ) * len(page)
     pagination_buttons = get_pagination_buttons(
         paginator,
-        prefix=f'doctor_protocols_{patient_name}'
+        prefix=f'doc_p_{protocol.patient_ulid}'
     )
     
     if len(pagination_buttons.items()) == 1:
@@ -188,10 +190,10 @@ async def doctor_protocols_callback_handler(callback: types.CallbackQuery):
     )
     
     
-@router.callback_query(F.data.startswith('patient_protocols_'))
+@router.callback_query(F.data.startswith('pat_p_'))
 async def patient_protocols_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
-    doctor_id = int(callback_data[-2])
+    doctor_id = callback_data[-2]
     page_number = int(callback_data[-1])
     message_text = ''
     buttons = {}
@@ -210,7 +212,7 @@ async def patient_protocols_callback_handler(callback: types.CallbackQuery):
         
     sizes = (2, 1)
     buttons.update(
-        get_pagination_buttons(paginator, prefix=f'patient_protocols_{doctor_id}')
+        get_pagination_buttons(paginator, prefix=f'pat_p_{doctor_id}')
     )
     
     if len(buttons.items()) == 1:
@@ -227,25 +229,30 @@ async def patient_protocols_callback_handler(callback: types.CallbackQuery):
         parse_mode='HTML'
     )
 
-@router.callback_query(F.data.startswith('protocol_'))
+@router.callback_query(F.data.startswith('prcl_'))
 async def protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
-    protocol_id = int(callback_data[-2])
-    page_number = int(callback_data[-1])
+    protocol_id = callback_data[-2]
+    page_number = callback_data[-1]
     reply_markup = None
     
     protocol = await Protocol.objects.aget(id=protocol_id)
     telegram_user = await get_doctor_or_patient(callback.from_user.id)
+    add_link = False 
     
     if isinstance(telegram_user, Doctor):
         reply_markup = get_inline_keyboard(
             buttons={
-                'Редактировать 📝': f'edit_protocol_{protocol.id}_{page_number}',
-                'Назад 🔙': f'doctor_protocols_{protocol.patient_name}_{page_number}'
+                'Редактировать 📝': f'edit_p_{protocol.id}_{page_number}',
+                'Назад 🔙': f'doc_p_{protocol.patient_ulid}_{page_number}'
             }        
         )
+        add_link = True
     
-    message_text = await get_protocol_info_message(protocol)
+    message_text = await get_protocol_info_message(
+        protocol,
+        add_link=add_link,
+    )
     
     await callback.message.edit_text(
         message_text,
@@ -254,10 +261,10 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
     )
     
 
-@router.callback_query(F.data.startswith('edit_protocol_'))
+@router.callback_query(F.data.startswith('edit_p_'))
 async def edit_protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
-    protocol_id = int(callback_data[-2])
+    protocol_id = callback_data[-2]
     page_number = int(callback_data[-1])
     buttons = {}
     message_text = 'Выберите препарат' 
@@ -269,7 +276,7 @@ async def edit_protocol_callback_handler(callback: types.CallbackQuery):
         button_str = f'{drug.name} | {drug.time_to_take.strftime("%H:%M")}' 
         buttons[button_str] = f'edit_drug_{drug.id}_{page_number}'
         
-    buttons.update({'Назад 🔙': f'protocol_{drug.protocol_id}_{page_number}'})
+    buttons.update({'Назад 🔙': f'prcl_{drug.protocol_id}_{page_number}'})
     sizes = (1, ) * len(buttons)    
       
     await callback.message.edit_text(
@@ -285,7 +292,7 @@ async def edit_protocol_callback_handler(callback: types.CallbackQuery):
 @router.callback_query(F.data.startswith('edit_drug_'))
 async def edit_drug_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')
-    drug_id = int(callback_data[-2])
+    drug_id = callback_data[-2]
     page_number = int(callback_data[-1])
 
     message_text = '<b>Редактирование 📝</b>\n\n'
@@ -294,10 +301,10 @@ async def edit_drug_callback_handler(callback: types.CallbackQuery):
     message_text += get_drug_info_message(drug)
     buttons = {
         'Изменить название 📝': f'edit_drugs_{drug.id}',
-        'Изменить дату первого приёма 📆': f'edit_first_take_{drug.id}',
+        'Изменить дату первого приёма 📆': f'edit_first_{drug.id}',
         'Изменить срок приёма ⏳': f'edit_period_{drug.id}',
-        'Изменить время приёма ⏰': f'edit_time_to_take_{drug.id}',
-        'Назад 🔙': f'edit_protocol_{drug.protocol_id}_{page_number}'
+        'Изменить время приёма ⏰': f'edit_time_{drug.id}',
+        'Назад 🔙': f'edit_p_{drug.protocol_id}_{page_number}' 
     }
     
     await callback.message.edit_text(

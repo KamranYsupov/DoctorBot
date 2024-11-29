@@ -1,3 +1,5 @@
+from core import config
+
 from asgiref.sync import sync_to_async
 
 from web.protocols.models import Protocol
@@ -18,7 +20,10 @@ def get_drug_info_message(drug: Drug) -> str:
 
 
 @sync_to_async
-def get_protocol_info_message(protocol: Protocol) -> str:
+def get_protocol_info_message(
+    protocol: Protocol, 
+    add_link: bool = False
+) -> str:
     message_info = (
     f'<b>Протокол ID:</b> {protocol.id}\n\n'
     f'<b>Препараты:</b>'
@@ -27,6 +32,10 @@ def get_protocol_info_message(protocol: Protocol) -> str:
     for drug in protocol.drugs.all():
         message_info += '\n\n' 
         message_info += get_drug_info_message(drug)
+        
+    if add_link:
+        protocol_start_link = f'{config.BOT_LINK}?start={protocol.id}'    
+        message_info += f'\n\n<b>Ссылка для пациента</b>: {protocol_start_link}'
     
     return message_info
 

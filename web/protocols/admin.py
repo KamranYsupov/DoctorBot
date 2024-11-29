@@ -13,17 +13,16 @@ class DrugInline(admin.TabularInline):
 class ProtocolAdmin(admin.ModelAdmin):
     """Админ-панель для управления протоколами"""
     list_display = (
-        'id',
         'patient_name',
         'doctor_fio',
-        'display_drugs'
+        'display_drugs',
+        'id',
     )
     list_display_links = (
-        'id',
         'patient_name',
         'doctor_fio',
     )
-    readonly_fields = ('patient_name', )
+    #readonly_fields = ('patient_name', )
     search_fields = (
         'patient_name__icontains', 
         'doctor__fio__icontains',

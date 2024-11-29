@@ -1,3 +1,4 @@
+import uuid
 import calendar
 from datetime import datetime, date, time, timedelta
 
@@ -50,8 +51,8 @@ async def edit_drug_name_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    drug_id = int(callback.data.split('_')[-1])
-
+    drug_id = callback.data.split('_')[-1]
+    
     await state.update_data(drug_id=drug_id)
     
     await callback.message.delete()
@@ -74,7 +75,7 @@ async def process_edit_drug_name(message: types.Message, state: FSMContext):
         return 
     
     state_data = await state.get_data()
-    drug_id = int(state_data['drug_id'])
+    drug_id = state_data['drug_id']
     
     drug = await Drug.objects.aget(id=drug_id)
     protocol_drugs = await Drug.objects.afilter(protocol_id=drug.protocol_id)
@@ -101,12 +102,12 @@ async def process_edit_drug_name(message: types.Message, state: FSMContext):
     await state.clear()
     
     
-@router.callback_query(F.data.startswith('edit_first_take_'))
+@router.callback_query(F.data.startswith('edit_first_'))
 async def edit_first_take_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    drug_id = int(callback.data.split('_')[-1])
+    drug_id = callback.data.split('_')[-1]
 
     await state.update_data(drug_id=drug_id)    
     await callback.message.delete()
@@ -124,7 +125,7 @@ async def process_edit_first_take(message: types.Message, state: FSMContext):
         return 
     
     state_data = await state.get_data()
-    drug_id = int(state_data['drug_id'])
+    drug_id = state_data['drug_id']
     
     drug = await Drug.objects.aget(id=drug_id)
     drug.first_take = first_take
@@ -152,7 +153,7 @@ async def edit_period_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    drug_id = int(callback.data.split('_')[-1])
+    drug_id = callback.data.split('_')[-1]
 
     await state.update_data(drug_id=drug_id)
     await callback.message.delete()
@@ -171,7 +172,7 @@ async def process_edit_period(message: types.Message, state: FSMContext):
         return 
     
     state_data = await state.get_data()
-    drug_id = int(state_data['drug_id'])
+    drug_id = state_data['drug_id']
     
     drug = await Drug.objects.aget(id=drug_id)
     drug.last_take = drug.first_take + timedelta(days=period)
@@ -193,12 +194,12 @@ async def process_edit_period(message: types.Message, state: FSMContext):
     await state.clear()
     
     
-@router.callback_query(F.data.startswith('edit_time_to_take_'))
+@router.callback_query(F.data.startswith('edit_time_'))
 async def edit_time_to_take_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    drug_id = int(callback.data.split('_')[-1])
+    drug_id = callback.data.split('_')[-1]
 
     await state.update_data(drug_id=drug_id)
     await callback.message.delete()
@@ -217,7 +218,7 @@ async def process_edit_time_to_take(message: types.Message, state: FSMContext):
         return 
     
     state_data = await state.get_data()
-    drug_id = int(state_data['drug_id'])
+    drug_id = state_data['drug_id']
     
     drug = await Drug.objects.aget(id=drug_id)
     protocol_drugs = await Drug.objects.afilter(protocol_id=drug.protocol_id)

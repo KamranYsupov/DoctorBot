@@ -9,7 +9,7 @@ class PatientBaseSchema(TelegramUserBaseSchema):
     
     
 class PatientSchema(PatientBaseSchema):
-    id: int 
+    id: str 
     
 
 class PatientCreateSchema(PatientBaseSchema):

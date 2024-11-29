@@ -12,15 +12,16 @@ class ProtocolBaseSchema(BaseModel):
     
 
 class ProtocolSchema(ProtocolBaseSchema):
-    id: int
+    id: str
     drugs: List[DrugSchema]
     doctor: DoctorSchema
     patient: Optional[PatientSchema]
     
     
 class ProtocolCreateSchema(ProtocolBaseSchema):
-    patient_id: Optional[int] = Field(title='ID Пациента', default=None)
-    doctor_id: int
+    patient_ulid: str
+    patient_id: Optional[str] = Field(title='ID Пациента', default=None)
+    doctor_id: str
     drugs: Optional[List[DrugCreateSchema]] = Field(
         title='Список препаратов',
         default=set()

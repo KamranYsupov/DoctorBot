@@ -29,6 +29,9 @@ async def validate_drugs(
     drug_obj: Union[DrugCreateSchema, Drug]
 ) -> Union[DrugCreateSchema, Drug, None]:
     
+    if len(drugs) == 1:
+        return drug_obj
+    
     ununique_drugs = list(
         filter(
             (lambda drug: drug.name == drug_obj.name
@@ -101,12 +104,14 @@ async def valdate_string_from_message(
     string = message.text
     
     if len(string) < min_length:
-        return await message.answer(
+        await message.answer(
             f'Длина должна более {min_length} символов'
         )
+        return
     if len(string) > max_length:
-        return await message.answer(
+        await message.answer(
             f'Длина не должна превышать {max_length} символов'
         )
+        return
         
     return string

@@ -8,7 +8,7 @@ class DoctorBaseSchema(TelegramUserBaseSchema):
     
     
 class DoctorSchema(DoctorBaseSchema):
-    id: int 
+    id: str 
     
 
 class DoctorCreateSchema(DoctorBaseSchema):

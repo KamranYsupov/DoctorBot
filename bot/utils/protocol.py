@@ -38,6 +38,6 @@ async def send_edit_protocol_notification_to_patient(
         chat_id=patient.telegram_id,
         text=f'Врач {doctor.fio} изменил ваш протокол.',
         reply_markup=get_inline_keyboard(
-            buttons={'Посмотреть изменения 🔎': f'protocol_1_{protocol.id}'}
+            buttons={'Посмотреть изменения 🔎': f'prcl_{protocol.id}_1'}
         )
     )

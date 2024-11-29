@@ -1,3 +1,4 @@
+﻿import uuid
 import calendar
 from datetime import datetime, date, time, timedelta
 
@@ -10,6 +11,7 @@ from aiogram.exceptions import TelegramBadRequest
 from asgiref.sync import sync_to_async
 from django.utils import timezone
 from django.conf import settings
+from ulid import ULID
 
 from core import config
 from keyboards.inline import get_inline_keyboard
@@ -28,9 +30,9 @@ from utils.validators import (
     valdate_time_to_take_from_message,
     validate_drugs,
 )
-from orm.protocol import create_protocol_and_set_drugs
+from orm.protocol import create_protocol_and_set_drugs, get_patient_uild
 from schemas.drug import DrugCreateSchema
-from utils.protocol import get_timedelta_calendar
+from utils.protocol import get_timedelta_calendar 
 from utils.message import default_process_time_to_take_message
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
@@ -43,7 +45,7 @@ router = Router()
     
 @router.message(F.text.casefold() == 'старт нового протокола 📝')
 async def start_protocol_handler(message: types.Message, state: FSMContext):
-    await message.answer('Введите имя пациента', reply_markup=reply_cancel_keyboard)    
+    await message.answer('Введите ФИО пациента', reply_markup=reply_cancel_keyboard)    
     await state.set_state(CreateProtocolState.patient_name)
     
     
@@ -152,12 +154,16 @@ async def process_time_to_take(message: types.Message, state: FSMContext):
 @router.callback_query(F.data == 'create_protocol')
 async def create_protocol_handler(callback: types.CallbackQuery, state: FSMContext):
     state_data = await state.get_data()
+    patient_name = state_data['patient_name']
     
     doctor = await Doctor.objects.aget(telegram_id=callback.from_user.id)
+    patient_ulid = await get_patient_uild(doctor.id, patient_name)
+    
     protocol_create_schema = ProtocolCreateSchema(
         drugs=state_data['drugs'],
         doctor_id=doctor.id,
-        patient_name=state_data['patient_name'],
+        patient_name=patient_name,
+        patient_ulid=patient_ulid
     )
     protocol = await create_protocol_and_set_drugs(
         schema=protocol_create_schema
@@ -214,7 +220,7 @@ async def add_drug_handler(callback: types.CallbackQuery, state: FSMContext):
     
 @router.callback_query(F.data.startswith('complete_drug_'))
 async def complete_drug(callback: types.CallbackQuery):
-    drug_id = int(callback.data.split('_')[-1])
+    drug_id = callback.data.split('_')[-1]
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
     

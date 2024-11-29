@@ -1,10 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from web.utils.base_manager import AsyncBaseManager
+from web.utils.db.base_manager import AsyncBaseManager
+from web.utils.db.model_mixins import AsyncBaseModel
 
 
-class Drug(models.Model):
+class Drug(AsyncBaseModel):
     name = models.CharField(
         _('Название'), 
         db_index=True,

@@ -9,7 +9,7 @@ class TelegramUserBaseSchema(BaseModel):
     
     
 class TelegramUserSchema(TelegramUserBaseSchema):
-    id: int 
+    id: str
     
 
 class TelegramUserCreateSchema(TelegramUserBaseSchema):

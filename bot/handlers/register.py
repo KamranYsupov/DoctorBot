@@ -1,3 +1,5 @@
+import uuid
+
 import loguru
 from aiogram import types, F, Router
 from aiogram.filters import StateFilter, Command, or_f
@@ -105,8 +107,16 @@ async def register_patient(
     state: FSMContext
 ):
     state_data = await state.get_data()
-    protocol_id = int(state_data['protocol_id'])
+    protocol_id = state_data['protocol_id']
     protocol = await Protocol.objects.aget(id=protocol_id)
+    
+    if protocol.patient_id:
+        await message.answer(
+            'Протокол уже добавлен другим пользователем',
+            reply_markup=reply_keyboard_remove,
+        )
+        return
+        
     
     await register_patient_or_add_protocol(
         message=message,

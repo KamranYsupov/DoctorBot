@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import List
 
 from asgiref.sync import sync_to_async
@@ -26,7 +27,7 @@ def get_or_create_patient_and_update_protocol(
     
     
 @sync_to_async
-def get_patient_doctors(patient_id: int) -> List[Doctor]:
+def get_patient_doctors(patient_id: str) -> List[Doctor]:
     doctor_ids = (
         Protocol.objects.filter(patient_id=patient_id)
         .select_related('patient', 'doctor')

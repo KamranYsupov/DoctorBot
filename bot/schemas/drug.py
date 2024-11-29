@@ -14,7 +14,7 @@ class DrugBaseSchema(BaseModel):
     
     
 class DrugSchema(DrugBaseSchema):
-    id: int
+    id: str
     
     
 class DrugCreateSchema(DrugBaseSchema):

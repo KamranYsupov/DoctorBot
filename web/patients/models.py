@@ -1,11 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from web.utils.model_mixins import AbstractTelegramUser
+from web.utils.db.model_mixins import AbstractTelegramUser
 
 
 class Patient(AbstractTelegramUser):
-    name = models.CharField(_('Имя'), max_length=150)
+    name = models.CharField(_('ФИО'), max_length=35)
     phone_number = models.CharField(
         _('Номер телефона'),
         max_length=50,
