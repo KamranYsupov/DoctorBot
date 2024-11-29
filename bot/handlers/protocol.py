@@ -26,6 +26,7 @@ from utils.validators import (
     valdate_first_take_from_message,
     valdate_period_from_message,
     valdate_time_to_take_from_message,
+    validate_drugs,
 )
 from orm.protocol import create_protocol_and_set_drugs
 from schemas.drug import DrugCreateSchema
@@ -134,6 +135,9 @@ async def process_time_to_take(message: types.Message, state: FSMContext):
     drugs = state_data.get('drugs')
     if not drugs:
         drugs = []
+    
+    if not await validate_drugs(message, drugs, drug_create_schema):
+        return 
         
     drugs.append(drug_create_schema) 
     await state.update_data(drugs=drugs)

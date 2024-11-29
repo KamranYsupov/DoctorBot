@@ -42,7 +42,7 @@ def get_protocol_inline_button_keyboard(
     protocol_id: int,
     page_number: int = 1,
 ):
-    buttons = {'Вернутся к протоколу 🔙': f'protocol_{page_number}_{protocol_id}'}
+    buttons = {'Вернутся к протоколу 🔙': f'protocol_{protocol_id}_{page_number}'}
     
     return get_inline_keyboard(buttons=buttons)
 

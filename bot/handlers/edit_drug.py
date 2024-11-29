@@ -27,6 +27,7 @@ from utils.validators import (
     valdate_first_take_from_message,
     valdate_period_from_message,
     valdate_time_to_take_from_message,
+    validate_drugs,
 )
 from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
@@ -76,7 +77,12 @@ async def process_edit_drug_name(message: types.Message, state: FSMContext):
     drug_id = int(state_data['drug_id'])
     
     drug = await Drug.objects.aget(id=drug_id)
+    protocol_drugs = await Drug.objects.afilter(protocol_id=drug.protocol_id)
     drug.name = drug_name
+    
+    if not await validate_drugs(message, protocol_drugs, drug):
+        return 
+   
     await drug.asave()
 
     await message.answer(
@@ -214,7 +220,12 @@ async def process_edit_time_to_take(message: types.Message, state: FSMContext):
     drug_id = int(state_data['drug_id'])
     
     drug = await Drug.objects.aget(id=drug_id)
+    protocol_drugs = await Drug.objects.afilter(protocol_id=drug.protocol_id)
     drug.time_to_take = time_to_take
+    
+    if not await validate_drugs(message, protocol_drugs, drug):
+        return 
+    
     await drug.asave()
     
 
