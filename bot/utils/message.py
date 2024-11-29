@@ -10,7 +10,7 @@ def get_drug_info_message(drug: Drug) -> str:
         f'<b>Дата первого приема:</b> {drug.first_take.strftime("%d.%m.%Y")}\n' 
         f'<b>Срок приема: </b>'
         f'<em>{drug.first_take.strftime("%d.%m.%Y")} '
-        f'- {drug.last_take.strftime("%d.%m.%Y")}</em> ({drug.period} дней)\n' 
+        f'- {drug.last_take.strftime("%d.%m.%Y")}</em>\n' 
         f'<b>Время приема:</b> {drug.time_to_take.strftime("%H:%M")}'
     )
     
