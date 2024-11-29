@@ -106,14 +106,6 @@ services:
     container_name: ${PROJECT_NAME}_beat
     command: -A web.core.celery beat -l debug
 
-  flower:
-    <<: *base_celery
-    hostname: flower
-    container_name: ${PROJECT_NAME}_flower
-    command: -A web.core.celery flower -P gevent
-    ports:
-      - "5555:5555"
-
   worker1:
     <<: *base_worker
     hostname: worker1
