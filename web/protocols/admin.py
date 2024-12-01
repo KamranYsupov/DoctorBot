@@ -1,6 +1,12 @@
 from django.contrib import admin
 
+from web.drugs.models import Drug
 from .models import Protocol
+
+
+class DrugInline(admin.TabularInline):
+    model = Drug
+    extra = 1
 
 
 @admin.register(Protocol)
@@ -10,8 +16,7 @@ class ProtocolAdmin(admin.ModelAdmin):
         'id',
         'patient_name',
         'doctor_fio',
-        'time_to_take',
-        'period',
+        'display_drugs'
     )
     list_display_links = (
         'id',
@@ -19,29 +24,25 @@ class ProtocolAdmin(admin.ModelAdmin):
         'doctor_fio',
     )
     readonly_fields = ('patient_name', )
-    excluded_fields = (
-        'reception_calendar',
-        'notifications_calendar'
-    )
     search_fields = (
-        'telegram_id', 
         'patient_name__icontains', 
         'doctor__fio__icontains',
     )
     
+    inlines = (DrugInline, )
+        
     @admin.display(description='ФИО доктора',)
     def doctor_fio(self, obj):
         return obj.doctor.fio
+    
+    @admin.display(description='Препараты',)
+    def display_drugs(self, obj):
+        return ', '.join([drug.name for drug in obj.drugs.all()])
+
     
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return self.readonly_fields
         return []
-    
 
-    
-    def get_exclude(self, request, obj=None):
-        if obj:
-            return self.excluded_fields
-        return ()
 

@@ -16,7 +16,6 @@ from keyboards.reply import (
 from schemas.doctor import DoctorCreateSchema
 from orm.telegram_user import get_doctor_or_patient
 from utils.patient import register_patient_or_add_protocol
-from utils.protocol import get_protocol_from_state
 from web.doctors.models import Doctor
 from .state import DoctorState, PatientState
 
@@ -77,7 +76,6 @@ async def cancel_message_handler(
     )
 
 
-
 @router.message(DoctorState.fio, F.text)
 async def register_doctor(message: types.Message, state: FSMContext):
     fio = message.text
@@ -105,7 +103,10 @@ async def register_patient(
     message: types.Message,
     state: FSMContext
 ):
-    protocol = await get_protocol_from_state(state) 
+    state_data = await state.get_data()
+    protocol_id = int(state_data['protocol_id'])
+    protocol = await Protocol.objects.aget(id=protocol_id)
+    
     await register_patient_or_add_protocol(
         message=message,
         protocol=protocol,

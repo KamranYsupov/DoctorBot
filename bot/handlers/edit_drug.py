@@ -33,85 +33,97 @@ from schemas.protocol import ProtocolCreateSchema
 from utils.validators import get_integer_from_string
 from utils.protocol import (
     get_timedelta_calendar,
-    get_protocol_from_state,
     send_edit_protocol_notification_to_patient
 )
 from utils.message import default_process_time_to_take_message
 from web.doctors.models import Doctor
 from web.protocols.models import Protocol
-from .state import EditProtocolState
+from web.drugs.models import Drug
+from .state import EditDrugState
 
 router = Router()
 
 
 @router.callback_query(F.data.startswith('edit_drugs_'))
-async def start_edit_drugs_handler(
+async def edit_drug_name_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    protocol_id = int(callback.data.split('_')[-1])
-    await state.update_data(protocol_id=protocol_id)
+    drug_id = int(callback.data.split('_')[-1])
+
+    await state.update_data(drug_id=drug_id)
+    
     await callback.message.delete()
     await callback.message.answer(
-        'Отправьте список препаратов одним сообщением через запятую\n\n'
-        '<b>Пример:</b> <b><em>Парацетамол,Глицин,Витамин Д</em></b>',
+        'Отправьте новое название препарата',
         reply_markup=reply_cancel_keyboard,
         parse_mode='HTML',
     )    
    
-    await state.set_state(EditProtocolState.drugs)
+    await state.set_state(EditDrugState.name)
     
     
-@router.message(EditProtocolState.drugs, F.text)
-async def process_drugs(message: types.Message, state: FSMContext):
-    drugs = message.text.split(',')
-
-    protocol = await get_protocol_from_state(state)
-    protocol.drugs = drugs
-    await sync_to_async(protocol.save)()
+@router.message(EditDrugState.name, F.text)
+async def process_edit_drug_name(message: types.Message, state: FSMContext):
+    drug_name = await valdate_string_from_message(
+        message,
+        max_length=150,
+    )
+    if not drug_name:
+        return 
+    
+    state_data = await state.get_data()
+    drug_id = int(state_data['drug_id'])
+    
+    drug = await Drug.objects.aget(id=drug_id)
+    drug.name = drug_name
+    await drug.asave()
 
     await message.answer(
-        'Cписок препаратов успешно изменён!',
+        'Название препарата успешно изменено!',
         reply_markup=reply_doctor_keyboard
     ) 
     await message.answer(
         'Посмотреть протокол',
-        reply_markup=get_protocol_inline_button_keyboard(protocol.id)
+        reply_markup=get_protocol_inline_button_keyboard(drug.protocol_id)
     )
     await send_edit_protocol_notification_to_patient(
         bot=message.bot,
-        protocol=protocol
+        protocol_id=drug.protocol_id
     )
     
     await state.clear()
     
     
 @router.callback_query(F.data.startswith('edit_first_take_'))
-async def start_edit_first_take_handler(
+async def edit_first_take_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    protocol_id = int(callback.data.split('_')[-1])
-    
-    await state.update_data(protocol_id=protocol_id)
+    drug_id = int(callback.data.split('_')[-1])
+
+    await state.update_data(drug_id=drug_id)    
     await callback.message.delete()
     await callback.message.answer(
         'Выберите день первого приёма',
         reply_markup=reply_calendar_keyboard,
     ) 
-    await state.set_state(EditProtocolState.first_take)
+    await state.set_state(EditDrugState.first_take)
     
     
-@router.message(EditProtocolState.first_take, F.text)
-async def process_first_take(message: types.Message, state: FSMContext):
+@router.message(EditDrugState.first_take, F.text)
+async def process_edit_first_take(message: types.Message, state: FSMContext):
     first_take = await valdate_first_take_from_message(message)
     if not first_take:
         return 
     
-    protocol = await get_protocol_from_state(state)
-    protocol.first_take = first_take
-    protocol.last_take = first_take + timedelta(days=protocol.period)
-    await sync_to_async(protocol.save)()
+    state_data = await state.get_data()
+    drug_id = int(state_data['drug_id'])
+    
+    drug = await Drug.objects.aget(id=drug_id)
+    drug.first_take = first_take
+    drug.last_take = first_take + timedelta(days=drug.period)
+    await drug.asave()
     
     await message.answer(
         'День первого приёма успешно изменён!',
@@ -119,44 +131,45 @@ async def process_first_take(message: types.Message, state: FSMContext):
     ) 
     await message.answer(
         'Посмотреть протокол',
-        reply_markup=get_protocol_inline_button_keyboard(protocol.id)
+        reply_markup=get_protocol_inline_button_keyboard(drug.protocol_id)
     )
     await send_edit_protocol_notification_to_patient(
         bot=message.bot,
-        protocol=protocol
+        protocol_id=drug.protocol_id
     )
 
-    
     await state.clear()
     
     
 @router.callback_query(F.data.startswith('edit_period_'))
-async def start_edit_period_handler(
+async def edit_period_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    protocol_id = int(callback.data.split('_')[-1])
-    
-    await state.update_data(protocol_id=protocol_id)
+    drug_id = int(callback.data.split('_')[-1])
+
+    await state.update_data(drug_id=drug_id)
     await callback.message.delete()
     await callback.message.answer(
         'Отправьте новое количество дней приёма',
         reply_markup=reply_cancel_keyboard,
         parse_mode='HTML',
     ) 
-    await state.set_state(EditProtocolState.period)
+    await state.set_state(EditDrugState.period)
     
     
-@router.message(EditProtocolState.period, F.text)
+@router.message(EditDrugState.period, F.text)
 async def process_edit_period(message: types.Message, state: FSMContext):
     period = await valdate_period_from_message(message)
     if not period:
         return 
-        
-    protocol = await get_protocol_from_state(state)
-    protocol.last_take = protocol.first_take + timedelta(days=period)
-    await sync_to_async(protocol.save)()
     
+    state_data = await state.get_data()
+    drug_id = int(state_data['drug_id'])
+    
+    drug = await Drug.objects.aget(id=drug_id)
+    drug.last_take = drug.first_take + timedelta(days=period)
+    await drug.asave()
     
     await message.answer(
         'Срок приёма успешно изменён!',
@@ -164,24 +177,24 @@ async def process_edit_period(message: types.Message, state: FSMContext):
     )  
     await message.answer(
         'Посмотреть протокол',
-        reply_markup=get_protocol_inline_button_keyboard(protocol.id)
+        reply_markup=get_protocol_inline_button_keyboard(drug.protocol_id)
     )
     await send_edit_protocol_notification_to_patient(
         bot=message.bot,
-        protocol=protocol
+        protocol_id=drug.protocol_id
     )
     
     await state.clear()
     
     
 @router.callback_query(F.data.startswith('edit_time_to_take_'))
-async def start_edit_time_to_take_handler(
+async def edit_time_to_take_handler(
     callback: types.CallbackQuery,
     state: FSMContext
 ):
-    protocol_id = int(callback.data.split('_')[-1])
-    
-    await state.update_data(protocol_id=protocol_id)
+    drug_id = int(callback.data.split('_')[-1])
+
+    await state.update_data(drug_id=drug_id)
     await callback.message.delete()
     await callback.message.answer(
         'Какое новое время приёма препаратов?\n\n'
@@ -189,17 +202,20 @@ async def start_edit_time_to_take_handler(
         reply_markup=reply_cancel_keyboard,
         parse_mode='HTML',
     ) 
-    await state.set_state(EditProtocolState.time_to_take)
+    await state.set_state(EditDrugState.time_to_take)
     
-@router.message(EditProtocolState.time_to_take, F.text)
+@router.message(EditDrugState.time_to_take, F.text)
 async def process_edit_time_to_take(message: types.Message, state: FSMContext):
     time_to_take = await valdate_time_to_take_from_message(message)
     if not time_to_take:
         return 
-        
-    protocol = await get_protocol_from_state(state)
-    protocol.time_to_take = time_to_take
-    await sync_to_async(protocol.save)()
+    
+    state_data = await state.get_data()
+    drug_id = int(state_data['drug_id'])
+    
+    drug = await Drug.objects.aget(id=drug_id)
+    drug.time_to_take = time_to_take
+    await drug.asave()
     
 
     await message.answer(
@@ -208,11 +224,11 @@ async def process_edit_time_to_take(message: types.Message, state: FSMContext):
     ) 
     await message.answer(
         'Посмотреть протокол',
-        reply_markup=get_protocol_inline_button_keyboard(protocol.id)
+        reply_markup=get_protocol_inline_button_keyboard(drug.protocol_id)
     )
     await send_edit_protocol_notification_to_patient(
         bot=message.bot,
-        protocol=protocol
+        protocol_id=drug.protocol_id
     )
     
     await state.clear()

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'web.doctors',
     'web.patients',
     'web.protocols',
+    'web.drugs',
 ]
 
 MIDDLEWARE = [
@@ -93,7 +94,6 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', 5432),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

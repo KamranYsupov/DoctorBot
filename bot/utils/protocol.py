@@ -16,20 +16,14 @@ def get_timedelta_calendar(first_take: datetime, period: int) -> dict:
         take = first_take + timedelta(days=day)
         timedelta_calendar[take.strftime('%d.%m.%Y')] = False
         
-    return timedelta_calendar
-
-
-async def get_protocol_from_state(state: FSMContext) -> Protocol:
-    state_data = await state.get_data()
-    protocol_id = int(state_data.get('protocol_id'))
-    
-    return await Protocol.objects.aget(id=protocol_id)
+    return timedelta_calendar    
 
 
 async def send_edit_protocol_notification_to_patient(
     bot: Bot,
-    protocol: Protocol,
+    protocol_id: int,
 ) -> None:
+    protocol = await Protocol.objects.aget(id=protocol_id)
     patient_list = await Patient.objects.afilter(id=protocol.patient_id)
     if not patient_list:
         return

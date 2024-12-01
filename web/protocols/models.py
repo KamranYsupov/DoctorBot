@@ -5,37 +5,11 @@ from web.utils.base_manager import AsyncBaseManager
 
 
 class Protocol(models.Model):
-    drugs = models.JSONField(_('Список препаратов'), default=list)
     patient_name = models.CharField(
         _('Имя пациента'), 
         db_index=True,
         max_length=150
     )
-    first_take = models.DateField(
-        _('День первого приема'),
-        auto_now=False,
-        auto_now_add=False
-    )
-    last_take = models.DateField(
-        _('День последнего приема'),
-        db_index=True,
-        auto_now=False,
-        auto_now_add=False
-    )
-    time_to_take = models.TimeField(
-        _('Время приема'),
-        auto_now=False,
-        auto_now_add=False
-    )
-    reception_calendar = models.JSONField(
-        _('Календарь према препаратов'),
-        default=dict
-    )
-    notifications_calendar = models.JSONField(
-        _('Календарь для проверки отправки уведомлений'),
-        default=dict
-    )
-    
     doctor = models.ForeignKey(
         'doctors.Doctor',
         verbose_name=_('Доктор'),
@@ -62,8 +36,4 @@ class Protocol(models.Model):
     def __str__(self):
         return f'ID {self.id} | {self.patient_name}'
     
-    @property
-    def period(self) -> int:
-        delta = self.last_take - self.first_take
-        
-        return delta.days
+    
