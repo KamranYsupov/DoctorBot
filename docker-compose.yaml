@@ -21,6 +21,21 @@ x-function: &base_python
   networks:
     - internal
 
+x-celery: &base_celery
+  <<: *base_python
+  build:
+    context: .
+    dockerfile: web.dockerfile
+  entrypoint: celery
+  links:
+    - redis
+  restart: always
+
+x-worker: &base_worker
+  <<: *base_celery
+  command: >
+    -A web.core.celery worker -l info -P gevent
+
 services:
   db:
     container_name: ${PROJECT_NAME}_db
@@ -85,47 +100,44 @@ services:
       - .env
     restart: always
 
-  worker:
-    <<: *base_python
-    build:
-      context: .
-      dockerfile: web.dockerfile
-    hostname: worker
-    container_name: ${PROJECT_NAME}_worker
-    entrypoint: celery
-    command: >
-      -A web.core.celery worker -l info -P gevent
-    links:
-      - redis
-    restart: always
-
   beat:
-    <<: *base_python
-    build:
-      context: .
-      dockerfile: web.dockerfile
+    <<: *base_celery
     hostname: beat
     container_name: ${PROJECT_NAME}_beat
-    entrypoint: celery
     command: -A web.core.celery beat -l debug
-    links:
-      - redis
-    restart: always
 
   flower:
-    <<: *base_python
-    build:
-      context: .
-      dockerfile: web.dockerfile
+    <<: *base_celery
     hostname: flower
     container_name: ${PROJECT_NAME}_flower
-    entrypoint: celery
     command: -A web.core.celery flower -P gevent
-    links:
-      - redis
     ports:
       - "5555:5555"
-    restart: always
+
+  worker1:
+    <<: *base_worker
+    hostname: worker1
+    container_name: ${PROJECT_NAME}_worker1
+
+  worker2:
+    <<: *base_worker
+    hostname: worker2
+    container_name: ${PROJECT_NAME}_worker2
+
+  worker3:
+    <<: *base_worker
+    hostname: worker3
+    container_name: ${PROJECT_NAME}_worker3
+
+  worker4:
+    <<: *base_worker
+    hostname: worker4
+    container_name: ${PROJECT_NAME}_worker4
+
+  worker5:
+    <<: *base_worker
+    hostname: worker5
+    container_name: ${PROJECT_NAME}_worker5
 
 volumes:
   static_dir:

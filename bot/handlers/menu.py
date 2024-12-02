@@ -266,7 +266,8 @@ async def edit_protocol_callback_handler(callback: types.CallbackQuery):
     drugs = await sync_to_async(protocol.drugs.all)()
     
     async for drug in drugs:
-        buttons[drug.name] = f'edit_drug_{drug.id}_{page_number}'
+        button_str = f'{drug.name} | {drug.time_to_take.strftime("%H:%M")}' 
+        buttons[button_str] = f'edit_drug_{drug.id}_{page_number}'
         
     buttons.update({'Назад 🔙': f'protocol_{drug.protocol_id}_{page_number}'})
     sizes = (1, ) * len(buttons)    
