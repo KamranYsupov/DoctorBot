@@ -33,10 +33,8 @@ from utils.validators import (
 from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
 from utils.validators import get_integer_from_string
-from utils.protocol import (
-    get_timedelta_calendar,
-    send_edit_protocol_notification_to_patient
-)
+from utils.protocol import send_edit_protocol_notification_to_patient
+from web.utils.calendar import get_timedelta_calendar 
 from utils.message import default_process_time_to_take_message
 from models import Drug, Doctor, Protocol
 from .state import EditDrugState
