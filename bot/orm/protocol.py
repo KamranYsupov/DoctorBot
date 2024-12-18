@@ -42,3 +42,6 @@ def get_patient_names_and_ulids_by_doctor_id(
     return list(patient_names_and_ulids)
 
 
+@sync_to_async
+def get_patient_uild(doctor_id: str, patient_name: str) -> str:
+    return get_patient_uild(doctor_id, patient_name)

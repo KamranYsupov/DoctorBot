@@ -1,10 +1,8 @@
 from ulid import ULID
-from asgiref.sync import sync_to_async
 
 from .models import Protocol
 
 
-@sync_to_async
 def get_patient_uild(doctor_id: str, patient_name: str) -> str:
     doctor_patient_protocols = list(Protocol.objects.filter(
         doctor_id=doctor_id,
