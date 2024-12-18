@@ -1,4 +1,4 @@
-import uuid
+﻿import uuid
 import calendar
 from datetime import datetime, date, time, timedelta
 
@@ -202,7 +202,7 @@ async def edit_time_to_take_handler(
     await state.update_data(drug_id=drug_id)
     await callback.message.delete()
     await callback.message.answer(
-        'Какое новое время приёма препаратов?\n\n'
+        'Какое новое время приёма препарата?\n\n'
         + default_process_time_to_take_message,
         reply_markup=reply_cancel_keyboard,
         parse_mode='HTML',
@@ -229,7 +229,7 @@ async def process_edit_time_to_take(message: types.Message, state: FSMContext):
     
 
     await message.answer(
-        'Время приёма препаратов успешно изменено!',
+        'Время приёма препарата успешно изменено!',
         reply_markup=reply_doctor_keyboard
     ) 
     await message.answer(
