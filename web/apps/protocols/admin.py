@@ -27,7 +27,7 @@ class ProtocolAdmin(admin.ModelAdmin):
         'doctor_fio',
     )
     readonly_fields = ('patient_name', )
-    excluded_fields = ('patient_ulid', )
+    exclude = ('patient_ulid', )
     search_fields = (
         'patient_name__icontains', 
         'doctor__fio__icontains',
@@ -48,9 +48,6 @@ class ProtocolAdmin(admin.ModelAdmin):
             return self.readonly_fields
         return []
     
-    def get_exclude(self, request, obj=None):
-        if obj:
-            return self.excluded_fields
-        return ()
+  
 
 
