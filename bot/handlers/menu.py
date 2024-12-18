@@ -241,8 +241,10 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
         reply_markup = get_inline_keyboard(
             buttons={
                 'Редактировать 📝': f'edit_p_{protocol.id}_{page_number}',
+                'Удалить 🗑': f'pre_rm_{protocol.id}_{page_number}',
                 'Назад 🔙': f'doc_p_{protocol.patient_ulid}_{page_number}'
-            }        
+            },
+            sizes=(1, 1, 1) 
         )
         add_link = True
     
@@ -257,7 +259,44 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
         parse_mode='HTML'
     )
     
-
+    
+@router.callback_query(F.data.startswith('pre_rm_'))
+async def pre_remove_protocol_callback_handler(callback: types.CallbackQuery):
+    callback_data = callback.data.split('_')
+    protocol_id = callback_data[-2]
+    page_number = callback_data[-1]
+    
+    await callback.message.edit_text(
+        '<b>Вы уверены?</b>',
+        reply_markup=get_inline_keyboard(
+            buttons={
+                'Да': f'rm_p_{protocol_id}_{page_number}',
+                'Нет': f'prcl_{protocol_id}_{page_number}'
+            },
+            sizes=(2, 1)
+        ),
+        parse_mode='HTML'
+    )
+    
+    
+@router.callback_query(F.data.startswith('rm_p_'))
+async def remove_protocol_callback_handler(callback: types.CallbackQuery):
+    callback_data = callback.data.split('_')
+    protocol_id = callback_data[-2]
+    page_number = callback_data[-1]
+    
+    protocol = await Protocol.objects.aget(id=protocol_id)
+    await sync_to_async(protocol.delete)()
+    
+    await callback.message.edit_text(
+        '<b>Протокол успешно удалён ✅</b>',
+        reply_markup=get_inline_keyboard(
+            buttons={'Назад 🔙': f'protocols_{page_number}'}
+        ),
+        parse_mode='HTML'
+    )
+    
+    
 @router.callback_query(F.data.startswith('edit_p_'))
 async def edit_protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')

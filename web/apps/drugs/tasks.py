@@ -220,7 +220,7 @@ def set_before_time_to_take_tasks(
         if minutes_before == settings.SEND_REMINDER_MINUTES_BEFORE_TIME_TO_TAKE[-1]:
             call_patient_before_time_to_take.apply_async(
                 args=(drug.id,),
-                eta=eta + timedelta(seconds=20)
+                eta=eta + timedelta(seconds=5)
             )
             send_reminder_kwargs['add_complete_take_button'] = True
             is_complete_take_button_sent = True
