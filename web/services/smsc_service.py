@@ -17,7 +17,7 @@ class SMSCService:
         message: str,
         seconds_to_wait: int = 25,
         repeat_interval: int = 0,
-        call_attemps: int = 1,
+        attemps_count: int = 1,
     ):
         params = {
             'login': self.login,
@@ -26,7 +26,7 @@ class SMSCService:
             'mes': message,
             'call': 1,
             'param': (
-                f'{seconds_to_wait},{repeat_interval},{call_attemps}'
+                f'{seconds_to_wait},{repeat_interval},{attemps_count}'
             )
         }
 
