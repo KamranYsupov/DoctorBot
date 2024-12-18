@@ -7,8 +7,6 @@ x-function: &base_python
   environment: &env-vars
     POETRY_HOME: /poetry
     PYTHONPATH: /app
-    SECRET_KEY: ${SECRET_KEY}
-    DEBUG: ${DEBUG}
     DB_HOST: ${DB_HOST}
     DB_NAME: ${DB_NAME}
     DB_USER: ${DB_USER}
@@ -16,6 +14,7 @@ x-function: &base_python
   depends_on:
     - db
     - redis
+    - rabbitmq
   env_file:
     - .env
   networks:
@@ -29,6 +28,7 @@ x-celery: &base_celery
   entrypoint: celery
   links:
     - redis
+    - rabbitmq
   restart: always
 
 x-worker: &base_worker
@@ -101,6 +101,20 @@ services:
       - .env
     restart: always
 
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: rabbitmq
+    container_name: ${PROJECT_NAME}_rabbitmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"
+    networks:
+      - internal
+    env_file:
+      - .env
+    restart: always
+
   beat:
     <<: *base_celery
     hostname: beat
@@ -122,6 +136,7 @@ volumes:
   media_dir:
   pg_data:
   redis_data:
+  rabbitmq_data:
   poetry-volume:                 
 
 networks:

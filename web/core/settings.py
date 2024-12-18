@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = False
 
@@ -141,17 +141,19 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'redis')
-REDIS_PORT = os.environ.get('REDIS_PORT', 6379)
-REDIS_DB_CELERY = os.environ.get('REDIS_DB_CELERY', 0)
-REDIS_DB_RESULT_CELERY = os.environ.get('REDIS_DB_RESULT_CELERY', 1)
-REDIS_DEFAULT_DB = os.environ.get('REDIS_DEFAULT_DB', 2)
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
 
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_CELERY}'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB_RESULT_CELERY}'
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'guest:guest@rabbitmq')
+RABBITMQ_PORT = os.getenv('RABBITMQ_PORT', '5672')
+
+CELERY_BROKER_URL = f'amqp://{RABBITMQ_HOST}:{RABBITMQ_PORT}/'
+CELERY_RESULT_BACKEND =  f'redis://{REDIS_HOST}:{REDIS_PORT}/1' 
+CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
 CELERY_ACCEPT_CONTENT = ['application/json']
 CElERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+CElERY_RESULT_SERIALIZER = 'json
+
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 TELEGRAM_API_URL = 'https://api.telegram.org'
@@ -169,7 +171,7 @@ PROTOCOL_DRUGS_TAKE_INTERVAL = (
 SMSC_LOGIN = os.getenv('SMSC_LOGIN')
 SMSC_PASSWORD = os.getenv('SMSC_PASSWORD')
 SMSC_CREATE_CALL_URL = 'https://smsc.ru/sys/send.php'
-CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE =  (
+CALL_PAITIENT_BEFORE_TIME_TO_TAKE_MESSAGE = (
     'Здравствуйте,  {patient}.'
     'доктор {doctor} напоминает о приеме препарата.'
 )
