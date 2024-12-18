@@ -38,14 +38,17 @@ def send_reminder_before_time_to_take(
     text = ''
     if minutes_before == 1:
         text += (
-	    f'Осталась <b>{minutes_before} минута</b>\n\n' 
+	    f'Осталась <b>{minutes_before} минута</b> '
+	    f'до приёма <b><em>{drug.name}</em></b>\n\n' 
 	    'Обязательно нажмите кнопку <em><b>«Выполнено ✅»</b></em>, '
-	    'чтобы подтвердить прием лекарства'
+	    'чтобы подтвердить приём лекарства'
 	)
     else:
-        text += f'Осталось <b>{minutes_before} минут</b>'
+        text += (
+            f'Осталось <b>{minutes_before} минут</b> '
+            f'до приёма <b><em>{drug.name}</em></b>'
+	)
         
-    text += f' до приёма <b><em>{drug.name}</em></b>'
     
     if add_complete_take_button:
         inline_keyboard = [[
