@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 from datetime import timedelta, date, datetime
 
 import loguru
@@ -37,7 +37,11 @@ def send_reminder_before_time_to_take(
     
     text = ''
     if minutes_before == 1:
-        text += f'Осталась <b>{minutes_before} минута</b>' 
+        text += (
+	    f'Осталась <b>{minutes_before} минута</b>\n\n' 
+	    'Обязательно нажмите кнопку <em><b>«Выполнено ✅»</b></em>, '
+	    'чтобы подтвердить прием лекарства'
+	)
     else:
         text += f'Осталось <b>{minutes_before} минут</b>'
         
