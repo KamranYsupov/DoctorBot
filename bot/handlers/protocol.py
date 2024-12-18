@@ -237,7 +237,9 @@ async def complete_drug(callback: types.CallbackQuery):
         except TelegramBadRequest:
             pass
         
-    if now > time_to_take and now < time_to_take + timedelta(
+    if now >= time_to_take - timedelta(
+        minutes=1
+    ) and now < time_to_take + timedelta(
         minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL
     ):
         drug.reception_calendar.update({current_date_strformat: True})
