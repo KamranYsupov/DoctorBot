@@ -98,6 +98,7 @@ def call_patient_before_time_to_take(drug_id: str):
         smsc_service.create_call(
             phone=patient.phone_number,
             message=call_message, 
+            attemps_count=1,
         )
     )
     
