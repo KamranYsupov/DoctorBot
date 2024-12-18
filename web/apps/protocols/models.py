@@ -5,7 +5,6 @@ from django.utils.translation import gettext_lazy as _
 
 from web.db.base_manager import AsyncBaseManager
 from web.db.model_mixins import AsyncBaseModel, TimestampMixin
-from .service import get_patient_uild
 
 
 class Protocol(AsyncBaseModel, TimestampMixin):
