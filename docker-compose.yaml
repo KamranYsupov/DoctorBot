@@ -125,7 +125,7 @@ services:
     <<: *base_celery
     hostname: flower
     container_name: ${PROJECT_NAME}_flower
-    command: -A web.core.celery flower 
+    command: -A web.core.celery flower -P gevent
   
   worker1:
     <<: *base_worker
