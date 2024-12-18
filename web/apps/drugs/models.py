@@ -3,6 +3,7 @@ from django.utils.translation import gettext_lazy as _
 
 from web.db.base_manager import AsyncBaseManager
 from web.db.model_mixins import AsyncBaseModel
+from web.utils.calendar import get_timedelta_calendar 
 
 
 class Drug(AsyncBaseModel):
@@ -49,7 +50,27 @@ class Drug(AsyncBaseModel):
         verbose_name = _('Препарат')
         verbose_name_plural = _('Препараты')
         ordering = ['time_to_take']
-
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__first_take = self.first_take
+        self.__last_take = self.last_take
+    
+    def save(self, *args, **kwargs):
+        if (
+            self.__first_take != self.first_take or
+            self.__last_take != self.last_take
+        ):      
+            timedelta_calendar = get_timedelta_calendar(
+                self.first_take, 
+                self.period
+            )
+        
+            self.reception_calendar = timedelta_calendar
+            self.notifications_calendar = timedelta_calendar
+            
+        return super().save(*args, **kwargs)
+    
     def __str__(self):
         return self.name
     

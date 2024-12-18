@@ -4,17 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram import Bot
 
 from keyboards.inline import get_inline_keyboard
-from models import Patient, Doctor, Protocol
-
-
-def get_timedelta_calendar(first_take: datetime, period: int) -> dict:    
-    timedelta_calendar = {}
-    
-    for day in range(period+1):
-        take = first_take + timedelta(days=day)
-        timedelta_calendar[take.strftime('%d.%m.%Y')] = False
-        
-    return timedelta_calendar    
+from models import Patient, Doctor, Protocol    
 
 
 async def send_edit_protocol_notification_to_patient(
