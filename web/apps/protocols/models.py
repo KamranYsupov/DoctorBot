@@ -48,8 +48,11 @@ class Protocol(AsyncBaseModel, TimestampMixin):
         return f'ID {self.id} | {self.patient_name}'
     
     def save(self, *args, **kwargs):
-        if not self.patient_ulid and self.patient:
-            self.patient_ulid = self.patient.id
+        if self.patient_ulid:
+            self.patient_ulid = get_patient_uild(
+                doctor_id=self.doctor_id,
+                patient_name=self.patient_name
+            )
 
         return super().save(*args, **kwargs)
     
