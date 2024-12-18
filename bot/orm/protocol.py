@@ -6,7 +6,6 @@ from ulid import ULID
 
 from schemas.protocol import ProtocolCreateSchema
 from models import Patient, Drug, Protocol
-from web.apps.protocols.service import get_patient_uild
 
 
 @sync_to_async
@@ -44,4 +43,13 @@ def get_patient_names_and_ulids_by_doctor_id(
 
 @sync_to_async
 def get_patient_uild(doctor_id: str, patient_name: str) -> str:
-    return get_patient_uild(doctor_id, patient_name)
+    doctor_patient_protocols = list(Protocol.objects.filter(
+        doctor_id=doctor_id,
+        patient_name=patient_name
+    ))
+    if doctor_patient_protocols:
+        patient_ulid = doctor_patient_protocols[0].patient_ulid
+    else: 
+        patient_ulid = str(ULID())
+        
+    return patient_ulid
