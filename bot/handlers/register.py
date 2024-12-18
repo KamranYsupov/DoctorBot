@@ -18,6 +18,7 @@ from keyboards.reply import (
 from schemas.doctor import DoctorCreateSchema
 from orm.telegram_user import get_doctor_or_patient
 from utils.patient import register_patient_or_add_protocol
+from utils.validators import validate_russian_phone_number
 from models import Doctor, Protocol
 from .state import DoctorState, PatientState
 
@@ -100,7 +101,7 @@ async def register_doctor(message: types.Message, state: FSMContext):
     await state.clear()
     
     
-@router.message(PatientState.phone_number, F.contact)
+@router.message(StateFilter(PatientState.phone_number), F.contact | F.text)
 async def register_patient(
     message: types.Message,
     state: FSMContext
@@ -115,12 +116,20 @@ async def register_patient(
             reply_markup=reply_keyboard_remove,
         )
         return
+            
+    if message.contact:
+        phone_number = message.contact.phone_number
+    else:
+        phone_number = message.text
+             
+    if not validate_russian_phone_number(phone_number):
+        await message.answer('Некорректный формат ввода')
+        return 
         
-    
     await register_patient_or_add_protocol(
         message=message,
         protocol=protocol,
-        phone_number=message.contact.phone_number
+        phone_number=phone_number
     )
         
     

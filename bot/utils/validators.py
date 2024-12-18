@@ -1,6 +1,7 @@
 ﻿import calendar
 from typing import List, Optional, Union
 from datetime import datetime, date, time, timedelta
+import re
 
 import loguru
 from aiogram import types, F, Router
@@ -111,3 +112,27 @@ async def valdate_string_from_message(
         return
         
     return string
+
+
+def validate_russian_phone_number(phone: str) -> bool | str:
+    """
+    Проверяет, является ли переданная строка российским номером телефона.
+
+    :param phone: Строка с номером телефона.
+    :return: True, если номер российский, иначе False.
+    """
+    
+    if phone[0] == '+':
+        phone = phone[1:]
+        
+    if phone[0] not in ('7', '8'):
+        return False
+        
+    for char in phone:
+        if not char.isdigit():
+            return False
+        
+    if len(phone) != 11:
+        return False
+    
+    return phone
