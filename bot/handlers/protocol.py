@@ -216,7 +216,7 @@ async def add_drug_handler(callback: types.CallbackQuery, state: FSMContext):
    
     
 @router.callback_query(F.data.startswith('complete_drug_'))
-async def complete_drug(callback: types.CallbackQuery):
+async def complete_drug_handler(callback: types.CallbackQuery):
     drug_id = callback.data.split('_')[-1]
     now = timezone.now()
     current_date_strformat = now.strftime('%d.%m.%Y')
