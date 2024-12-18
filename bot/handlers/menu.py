@@ -9,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.exceptions import TelegramBadRequest
 from asgiref.sync import sync_to_async
+from django.utils import timezone
 
 from core import config
 from keyboards.inline import get_inline_keyboard, get_menu_keyboard
@@ -27,6 +28,7 @@ from utils.pagination import Paginator, get_pagination_buttons
 from utils.message import (
     get_protocol_info_message,
     get_drug_info_message,
+    get_protocol_statistic_message
 )
 from models import Patient, Drug, Doctor, Protocol
 
@@ -240,11 +242,12 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
     if isinstance(telegram_user, Doctor):
         reply_markup = get_inline_keyboard(
             buttons={
+                'Статистика 📊': f'st_p_{protocol.id}_{page_number}_1',
                 'Редактировать 📝': f'edit_p_{protocol.id}_{page_number}',
                 'Удалить 🗑': f'pre_rm_{protocol.id}_{page_number}',
                 'Назад 🔙': f'doc_p_{protocol.patient_ulid}_{page_number}'
             },
-            sizes=(1, 1, 1) 
+            sizes=(1, 2, 1) 
         )
         add_link = True
     
@@ -259,7 +262,62 @@ async def protocol_callback_handler(callback: types.CallbackQuery):
         parse_mode='HTML'
     )
     
+
+@router.callback_query(F.data.startswith('st_p_'))
+async def statistic_protocol_callback_handler(callback: types.CallbackQuery):
+    callback_data = callback.data.split('_')
+    protocol_id = callback_data[-3]
+    protocol_page_number = int(callback_data[-2])
+    page_number = int(callback_data[-1])
     
+    buttons = {}
+    sizes = (2, 1)
+    
+    protocol = await Protocol.objects.aget(id=protocol_id)
+    general_reception_calendar = {}
+
+    async for drug in await sync_to_async(protocol.drugs.all)():
+        general_reception_calendar.update({
+            f'{drug.id}赛{drug.name}赛{drug.time_to_take}赛{date}': status
+            for date, status in drug.reception_calendar.items()
+        })
+        
+    message_text = f'<b>Статистика {protocol.patient_name} | ID: {protocol.id}</b>\n'
+
+    paginator = Paginator(
+        array=list(general_reception_calendar.keys()),
+        page_number=page_number,
+        per_page=75,
+    )
+    message_text += get_protocol_statistic_message(
+        paginator.get_page(),
+        general_reception_calendar,
+    )
+            
+    buttons.update(
+        get_pagination_buttons(
+            paginator,
+            prefix=f'st_p_{protocol_id}_{protocol_page_number}'
+        )
+    )
+    
+    if len(buttons.items()) == 1:
+        sizes = (1, 1)
+        
+    buttons['Назад 🔙'] = \
+        f'prcl_{protocol_id}_{protocol_page_number}'
+    
+    
+    await callback.message.edit_text(
+        message_text,
+        reply_markup=get_inline_keyboard(
+            buttons=buttons,
+            sizes=sizes
+        ),
+        parse_mode='HTML'
+    )
+    
+       
 @router.callback_query(F.data.startswith('pre_rm_'))
 async def pre_remove_protocol_callback_handler(callback: types.CallbackQuery):
     callback_data = callback.data.split('_')

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Any
 
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
@@ -7,12 +8,16 @@ from keyboards.inline import get_inline_keyboard
 from models import Patient, Doctor, Protocol
 
 
-def get_timedelta_calendar(first_take: datetime, period: int) -> dict:    
+def get_timedelta_calendar(
+    first_take: datetime,
+    period: int,
+    default_value: Any = None
+) -> dict:    
     timedelta_calendar = {}
     
     for day in range(period+1):
         take = first_take + timedelta(days=day)
-        timedelta_calendar[take.strftime('%d.%m.%Y')] = False
+        timedelta_calendar[take.strftime('%d.%m.%Y')] = default_value
         
     return timedelta_calendar    
 
