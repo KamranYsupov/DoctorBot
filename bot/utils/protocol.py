@@ -20,7 +20,7 @@ def get_timedelta_calendar(
         take = first_take + timedelta(days=day)
         timedelta_calendar[take.strftime(settings.DEFAULT_DATE_FORMAT)] = default_value
     
-    return sorted_timedelta_calendar    
+    return timedelta_calendar    
 
 
 def sort_timedelta_calendar(
