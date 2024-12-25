@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 import loguru
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.conf import settings
 
 from web.db.base_manager import AsyncBaseManager
@@ -91,3 +92,17 @@ class Drug(AsyncBaseModel):
         delta = self.last_take - self.first_take
         
         return delta.days
+    
+    
+    def is_available_to_notify(self, day: datetime) -> bool:
+        current_date_strformat = datetime.strftime(settings.DEFAULT_DATE_FORMAT)
+        
+        try:
+            self.reception_calendar[current_date_strformat] 
+        except KeyError:
+            return False
+    
+        if self.reception_calendar[current_date_strformat]:
+            return False
+        
+        return True
