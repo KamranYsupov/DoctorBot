@@ -28,7 +28,7 @@ def send_reminder_before_time_to_take(
     reply_markup = None
     
     now = timezone.now()
-    current_date_strformat = now.strftime('%d.%m.%Y')
+    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
     
     if drug.reception_calendar.get(current_date_strformat):
         return 
@@ -80,7 +80,7 @@ def call_patient_before_time_to_take(drug_id: str):
     
     drug = Drug.objects.get(id=drug_id)    
     now = timezone.now()
-    current_date_strformat = now.strftime('%d.%m.%Y')
+    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
 
     if drug.reception_calendar.get(current_date_strformat):
         return 
@@ -114,7 +114,7 @@ def send_reminder_after_time_to_take(drug_id: str):
     
     drug = Drug.objects.get(id=drug_id)
     now = timezone.now()
-    current_date_strformat = now.strftime('%d.%m.%Y')
+    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
     
     if drug.reception_calendar.get(current_date_strformat):
         return 
@@ -145,7 +145,7 @@ def notify_doctor_about_drug_take_miss(drug_id: str):
     drug = Drug.objects.get(id=drug_id)
     protocol = drug.protocol
     now = timezone.now()
-    current_date_strformat = now.strftime('%d.%m.%Y')
+    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
     
     datetime_to_take = timezone.make_aware(
         timezone.datetime.combine(
@@ -156,7 +156,10 @@ def notify_doctor_about_drug_take_miss(drug_id: str):
 
     if drug.reception_calendar.get(current_date_strformat):
         return 
-
+    
+    drug.reception_calendar[current_date_strformat] = False
+    drug.save()
+    
     text = (
         f'Пациент {protocol.patient_name} '
         f'пропустил приём <b><em>{drug.name}</em></b> по протоколу ' 
@@ -198,7 +201,7 @@ def set_notifications():
         is_complete_take_button_sent = set_before_time_to_take_tasks(
             drug, now, datetime_to_take
         )
-        drug.notifications_calendar[now.strftime('%d.%m.%Y')] = True
+        drug.notifications_calendar[now.strftime(settings.DEFAULT_DATE_FORMAT)] = True
         
         if not is_complete_take_button_sent:
             continue

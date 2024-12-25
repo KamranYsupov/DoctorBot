@@ -62,14 +62,15 @@ class Drug(AsyncBaseModel):
             self.__first_take != self.first_take or
             self.__last_take != self.last_take
         ):      
-            timedelta_calendar = {}
-    
+            self.reception_calendar = {}
+            self.notifications_calendar = {}
+            
             for day in range(self.period+1):
                 take = self.first_take + timedelta(days=day)
-                timedelta_calendar[take.strftime('%d.%m.%Y')] = False
-
-            self.reception_calendar = timedelta_calendar
-            self.notifications_calendar = timedelta_calendar
+                take_strformat = take.strftime('%d.%m.%Y')
+                
+                self.reception_calendar[take_strformat] = None
+                self.notifications_calendar[take_strformat] = False
             
         return super().save(*args, **kwargs)
     
