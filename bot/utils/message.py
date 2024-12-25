@@ -51,7 +51,7 @@ def get_protocol_statistic_message(
     message_text = ''
     current_drug_id = None
     now = timezone.now()
-    
+        
     for string_data in dates:
         drug_id = string_data.split('赛')[0]
         date = string_data.split('赛')[-1]

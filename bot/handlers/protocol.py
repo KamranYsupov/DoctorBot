@@ -119,22 +119,18 @@ async def process_time_to_take(message: types.Message, state: FSMContext):
     first_take = state_data['first_take']
     period = state_data['period']
     last_take = first_take + timedelta(days=period)
+    timedelta_calendar = get_timedelta_calendar(
+        first_take,
+        period,
+    )
     
     drug_create_schema = DrugCreateSchema(
         name=state_data['drug_name'],
         first_take=first_take,
         last_take=last_take,
         time_to_take=state_data['time_to_take'],
-        reception_calendar=get_timedelta_calendar(
-            first_take,
-            period,
-            default_value=None
-        ),
-        notifications_calendar=get_timedelta_calendar(
-            first_take,
-            period,
-            default_value=False
-    )
+        reception_calendar=timedelta_calendar,
+        notifications_calendar=timedelta_calendar
     )
         
     drugs = state_data.get('drugs')

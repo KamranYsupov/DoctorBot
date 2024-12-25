@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from web.db.base_manager import AsyncBaseManager
 from web.db.model_mixins import AsyncBaseModel
@@ -62,15 +63,23 @@ class Drug(AsyncBaseModel):
             self.__first_take != self.first_take or
             self.__last_take != self.last_take
         ):      
-            self.reception_calendar = {}
-            self.notifications_calendar = {}
+            timedelta_calendar = {}
             
             for day in range(self.period+1):
                 take = self.first_take + timedelta(days=day)
-                take_strformat = take.strftime('%d.%m.%Y')
+                take_strformat = take.strftime(settigs.DEFAULT_DATE_FORMAT)
                 
-                self.reception_calendar[take_strformat] = None
-                self.notifications_calendar[take_strformat] = False
+                timedelta_calendar[take_strformat] = None
+                
+            sorted_timedelta_calendar = dict(
+                sorted(
+                    timedelta_calendar.items(), 
+                    key=lambda item: datetime.strptime(
+                        item[0], settigs.DEFAULT_DATE_FORMAT
+                    ))
+            )
+            self.reception_calendar = sorted_timedelta_calendar
+            self.notifications_calendar = sorted_timedelta_calendar
             
         return super().save(*args, **kwargs)
     
