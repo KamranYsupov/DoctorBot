@@ -120,17 +120,16 @@ services:
     hostname: beat
     container_name: ${PROJECT_NAME}_beat
     command: -A web.core.celery beat -l debug
-
-  flower:
-    <<: *base_celery
-    hostname: flower
-    container_name: ${PROJECT_NAME}_flower
-    command: -A web.core.celery flower -P gevent
   
   worker1:
     <<: *base_worker
     hostname: worker1
     container_name: ${PROJECT_NAME}_worker1
+
+  worker2:
+    <<: *base_worker
+    hostname: worker2
+    container_name: ${PROJECT_NAME}_worker2
 
 volumes:
   static_dir:
