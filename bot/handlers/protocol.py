@@ -19,7 +19,7 @@ from keyboards.reply import (
     reply_keyboard_remove, 
     get_reply_keyboard,
     reply_cancel_keyboard,
-    reply_calendar_keyboard,
+    get_reply_calendar_keyboard,
 )
 from schemas.doctor import DoctorCreateSchema
 from schemas.protocol import ProtocolCreateSchema
@@ -73,7 +73,7 @@ async def process_drug_name(message: types.Message, state: FSMContext):
     await state.update_data(drug_name=drug_name)   
     await message.answer(
         'Выберите день первого приёма',
-        reply_markup=reply_calendar_keyboard,
+        reply_markup=get_reply_calendar_keyboard(),
     ) 
     await state.set_state(CreateProtocolState.first_take)
     

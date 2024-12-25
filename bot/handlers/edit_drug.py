@@ -20,7 +20,7 @@ from keyboards.reply import (
     reply_keyboard_remove, 
     reply_cancel_keyboard,
     get_reply_keyboard,
-    reply_calendar_keyboard,
+    get_reply_calendar_keyboard,
     reply_doctor_keyboard,
 )
 from utils.validators import (
@@ -111,7 +111,7 @@ async def edit_first_take_handler(
     await callback.message.delete()
     await callback.message.answer(
         'Выберите день первого приёма',
-        reply_markup=reply_calendar_keyboard,
+        reply_markup=get_reply_calendar_keyboard(),
     ) 
     await state.set_state(EditDrugState.first_take)
     
