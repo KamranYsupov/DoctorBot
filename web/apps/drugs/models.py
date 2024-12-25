@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import loguru
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -62,18 +63,24 @@ class Drug(AsyncBaseModel):
         if (
             self.__first_take != self.first_take or
             self.__last_take != self.last_take
-        ):      
-            timedelta_calendar = {}
+        ):   
+            updated_reception_calendar = {}
+            updated_notifications_calendar = {}
             
             for day in range(self.period+1):
                 take = self.first_take + timedelta(days=day)
                 take_strformat = take.strftime(settings.DEFAULT_DATE_FORMAT)
                 
-                timedelta_calendar[take_strformat] = None
+                updated_reception_calendar[take_strformat] = \
+                    self.reception_calendar.get(take_strformat)
                 
-            self.reception_calendar = timedelta_calendar
-            self.notifications_calendar = timedelta_calendar
+                updated_notifications_calendar[take_strformat] = \
+                    self.notifications_calendar.get(take_strformat)
+                    
+            self.reception_calendar = updated_reception_calendar
+            self.notifications_calendar = updated_notifications_calendar
             
+
         return super().save(*args, **kwargs)
     
     def __str__(self):
