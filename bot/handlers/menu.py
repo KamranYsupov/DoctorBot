@@ -25,6 +25,7 @@ from orm.telegram_user import get_doctor_or_patient
 from orm.patient import get_patient_doctors 
 from orm.protocol import get_patient_names_and_ulids_by_doctor_id
 from utils.pagination import Paginator, get_pagination_buttons
+from utils.protocol import sort_timedelta_calendar
 from utils.message import (
     get_protocol_info_message,
     get_drug_info_message,
@@ -277,9 +278,12 @@ async def statistic_protocol_callback_handler(callback: types.CallbackQuery):
     general_reception_calendar = {}
 
     async for drug in await sync_to_async(protocol.drugs.all)():
+        sorted_reception_calendar = sort_timedelta_calendar(
+            drug.reception_calendar
+        )
         general_reception_calendar.update({
             f'{drug.id}赛{drug.name}赛{date}': status
-            for date, status in drug.reception_calendar.items()
+            for date, status in sorted_reception_calendar.items()
         })
         
     message_text = f'<b>Статистика {protocol.patient_name} | ID: {protocol.id}</b>\n'

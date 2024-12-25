@@ -61,7 +61,7 @@ def get_protocol_statistic_message(
             current_drug_id = drug_id
             
             drug_name = string_data.split('赛')[-2]
-            dates_data[drug_name] = {}
+            message_text += f'\n<b>{drug_name}</b>\n\n'
            
         
         if general_reception_calendar[string_data]:
@@ -71,14 +71,7 @@ def get_protocol_statistic_message(
         else:
             status = 'Не выполнен'
                 
-        dates_data[drug_name][date] = status
-            
-    for drug_name in dates_data:
-        message_text += f'\n<b>{drug_name}</b>\n\n'
-        sorted_dates = sort_timedelta_calendar(dates_data[drug_name])
-        
-        for date, status in sorted_dates.items():
-            message_text += f'{date}: <b>{status}</b>\n'
+        message_text += f'{date}: <b>{status}</b>\n'
         
     return message_text
 

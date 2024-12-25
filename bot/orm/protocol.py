@@ -36,6 +36,7 @@ def get_patient_names_and_ulids_by_doctor_id(
         .filter(doctor_id=doctor_id)
         .select_related('patient', 'doctor')
         .values_list('patient_name', 'patient_ulid')
+        .order_by('-created_at')
     )
     
     return list(patient_names_and_ulids)
