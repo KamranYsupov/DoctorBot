@@ -278,7 +278,7 @@ async def statistic_protocol_callback_handler(callback: types.CallbackQuery):
 
     async for drug in await sync_to_async(protocol.drugs.all)():
         general_reception_calendar.update({
-            f'{drug.id}赛{drug.name}赛{drug.time_to_take}赛{date}': status
+            f'{drug.id}赛{drug.name}赛{date}': status
             for date, status in drug.reception_calendar.items()
         })
         

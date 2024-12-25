@@ -4,7 +4,7 @@ from django.conf import settings
 
 from core import config
 from models import Drug, Protocol
-from utils.pagination import Paginator
+from utils.protocol import sort_timedelta_calendar
 
 from datetime import datetime, timedelta, date, time
 from typing import List, Dict
@@ -51,6 +51,7 @@ def get_protocol_statistic_message(
     message_text = ''
     current_drug_id = None
     now = timezone.now()
+    dates_data = {}
         
     for string_data in dates:
         drug_id = string_data.split('赛')[0]
@@ -59,25 +60,25 @@ def get_protocol_statistic_message(
         if current_drug_id != drug_id:
             current_drug_id = drug_id
             
-            time_to_take = string_data.split('赛')[-2]
-            datetime_string = f'{time_to_take} {date}'
-            take_miss_datetime = timezone.make_aware(
-                datetime.strptime(datetime_string, '%H:%M:%S %d.%m.%Y') \
-                + timedelta(minutes=settings.PROTOCOL_DRUGS_TAKE_INTERVAL)
-            )
-            
-            drug_name = string_data.split('赛')[-3]
-            message_text += f'\n<b>{drug_name}</b>\n\n'
-        
+            drug_name = string_data.split('赛')[-2]
+            dates_data[drug_name] = {}
+           
         
         if general_reception_calendar[string_data]:
-            status_str = 'Выполнен ✅ '
+            status = 'Выполнен ✅ '
         elif general_reception_calendar[string_data] == False:
-            status_str = 'Пропущен ❌'
+            status = 'Пропущен ❌'
         else:
-            status_str = 'Не выполнен'
-
-        message_text += f'{date}: <b>{status_str}</b>\n'
+            status = 'Не выполнен'
+                
+        dates_data[drug_name][date] = status
+            
+    for drug_name in dates_data:
+        message_text += f'\n<b>{drug_name}</b>\n\n'
+        sorted_dates = sort_timedelta_calendar(dates_data[drug_name])
+        
+        for date, status in sorted_dates.items():
+            message_text += f'{date}: <b>{status}</b>\n'
         
     return message_text
 

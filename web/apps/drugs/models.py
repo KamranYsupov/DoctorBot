@@ -67,19 +67,12 @@ class Drug(AsyncBaseModel):
             
             for day in range(self.period+1):
                 take = self.first_take + timedelta(days=day)
-                take_strformat = take.strftime(settigs.DEFAULT_DATE_FORMAT)
+                take_strformat = take.strftime(settings.DEFAULT_DATE_FORMAT)
                 
                 timedelta_calendar[take_strformat] = None
                 
-            sorted_timedelta_calendar = dict(
-                sorted(
-                    timedelta_calendar.items(), 
-                    key=lambda item: datetime.strptime(
-                        item[0], settigs.DEFAULT_DATE_FORMAT
-                    ))
-            )
-            self.reception_calendar = sorted_timedelta_calendar
-            self.notifications_calendar = sorted_timedelta_calendar
+            self.reception_calendar = timedelta_calendar
+            self.notifications_calendar = timedelta_calendar
             
         return super().save(*args, **kwargs)
     

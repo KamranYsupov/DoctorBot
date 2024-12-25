@@ -1,5 +1,5 @@
 ﻿from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Dict
 
 from aiogram.fsm.context import FSMContext
 from aiogram import Bot
@@ -19,16 +19,22 @@ def get_timedelta_calendar(
     for day in range(period+1):
         take = first_take + timedelta(days=day)
         timedelta_calendar[take.strftime(settings.DEFAULT_DATE_FORMAT)] = default_value
-        
+    
+    return sorted_timedelta_calendar    
+
+
+def sort_timedelta_calendar(
+    timedelta_calendar: Dict,
+) -> Dict:
     sorted_timedelta_calendar = dict(
         sorted(
             timedelta_calendar.items(), 
-            key=lambda item: datetime.strptime(
+                key=lambda item: datetime.strptime(
                 item[0], settings.DEFAULT_DATE_FORMAT
         ))
     )
     
-    return sorted_timedelta_calendar    
+    return sorted_timedelta_calendar
 
 
 async def send_edit_protocol_notification_to_patient(
