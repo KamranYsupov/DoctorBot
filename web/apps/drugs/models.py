@@ -95,7 +95,7 @@ class Drug(AsyncBaseModel):
     
     
     def is_available_to_notify(self, day: datetime) -> bool:
-        current_date_strformat = datetime.strftime(settings.DEFAULT_DATE_FORMAT)
+        current_date_strformat = day.strftime(settings.DEFAULT_DATE_FORMAT)
         
         try:
             self.reception_calendar[current_date_strformat] 
