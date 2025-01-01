@@ -28,9 +28,8 @@ def send_reminder_before_time_to_take(
     reply_markup = None
     
     now = timezone.now()
-    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
     
-    if drug.reception_calendar.get(current_date_strformat):
+    if not drug.is_available_to_notify(now):
         return 
     
     telegram_id = drug.protocol.patient.telegram_id
@@ -80,10 +79,9 @@ def call_patient_before_time_to_take(drug_id: str):
     
     drug = Drug.objects.get(id=drug_id)    
     now = timezone.now()
-    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
-
-    if drug.reception_calendar.get(current_date_strformat):
-        return 
+    
+    if not drug.is_available_to_notify(now):
+        return
     
     patient = drug.protocol.patient
     doctor = drug.protocol.doctor
@@ -114,9 +112,8 @@ def send_reminder_after_time_to_take(drug_id: str):
     
     drug = Drug.objects.get(id=drug_id)
     now = timezone.now()
-    current_date_strformat = now.strftime(settings.DEFAULT_DATE_FORMAT)
     
-    if drug.reception_calendar.get(current_date_strformat):
+    if not drug.is_available_to_notify(now):
         return 
     
     telegram_id = drug.protocol.patient.telegram_id
@@ -154,7 +151,7 @@ def notify_doctor_about_drug_take_miss(drug_id: str):
         )
     )
 
-    if drug.reception_calendar.get(current_date_strformat):
+    if not drug.is_available_to_notify(now):
         return 
     
     drug.reception_calendar[current_date_strformat] = False
