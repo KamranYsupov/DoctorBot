@@ -6,7 +6,6 @@ from aiogram.types import Message
 
 from core import config 
 
-
 async def rate_limit_middleware(
     handler: Coroutine,
     event: Message,
@@ -20,11 +19,22 @@ async def rate_limit_middleware(
     if not hasattr(rate_limit_middleware, 'users'):
         rate_limit_middleware.users = {}
 
-    if user_id in rate_limit_middleware.users:
-        last_message_time = rate_limit_middleware.users[user_id]
+    if user_id not in rate_limit_middleware.users:
+        rate_limit_middleware.users[user_id] = {
+            'last_message_time': current_time,
+            'warning_sent': False
+        }
+        return await handler(event, data)
 
-        if current_time - last_message_time < config.MAX_MESSAGE_PER_SECOND:
-            return await event.answer('Слишком много сообщений! Попробуйте позже.')
+    user_data = rate_limit_middleware.users[user_id]
+    last_message_time = user_data['last_message_time']
 
-    rate_limit_middleware.users[user_id] = current_time
+    if current_time - last_message_time < config.MAX_MESSAGE_PER_SECOND:
+        if not user_data['warning_sent']:
+            await event.answer('Слишком много сообщений! Попробуйте позже.')
+            user_data['warning_sent'] = True 
+        return  
+
+    user_data['last_message_time'] = current_time
+    user_data['warning_sent'] = False  
     return await handler(event, data)

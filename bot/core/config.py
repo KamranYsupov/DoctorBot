@@ -15,5 +15,5 @@ QR_CODE_API_GENERATOR_URL = 'https://api.qrserver.com/v1/create-qr-code/?size=15
 
 MAX_DRUG_COUNT_IN_PROTOCOL = os.getenv('MAX_DRUG_COUNT_IN_PROTOCOL', 25)
 
-MAX_MESSAGE_PER_SECOND = os.getenv('MAX_MESSAGE_PER_SECOND', 3)
+MAX_MESSAGE_PER_SECOND = os.getenv('MAX_MESSAGE_PER_SECOND', 2)
 
