@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
+import loguru
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 from django.conf import settings
 
 from web.db.base_manager import AsyncBaseManager
@@ -62,18 +64,24 @@ class Drug(AsyncBaseModel):
         if (
             self.__first_take != self.first_take or
             self.__last_take != self.last_take
-        ):      
-            timedelta_calendar = {}
+        ):   
+            updated_reception_calendar = {}
+            updated_notifications_calendar = {}
             
             for day in range(self.period+1):
                 take = self.first_take + timedelta(days=day)
                 take_strformat = take.strftime(settings.DEFAULT_DATE_FORMAT)
                 
-                timedelta_calendar[take_strformat] = None
+                updated_reception_calendar[take_strformat] = \
+                    self.reception_calendar.get(take_strformat)
                 
-            self.reception_calendar = timedelta_calendar
-            self.notifications_calendar = timedelta_calendar
+                updated_notifications_calendar[take_strformat] = \
+                    self.notifications_calendar.get(take_strformat)
+                    
+            self.reception_calendar = updated_reception_calendar
+            self.notifications_calendar = updated_notifications_calendar
             
+
         return super().save(*args, **kwargs)
     
     def __str__(self):
@@ -84,3 +92,17 @@ class Drug(AsyncBaseModel):
         delta = self.last_take - self.first_take
         
         return delta.days
+    
+    
+    def is_available_to_notify(self, day: datetime) -> bool:
+        current_date_strformat = day.strftime(settings.DEFAULT_DATE_FORMAT)
+        
+        try:
+            self.reception_calendar[current_date_strformat] 
+        except KeyError:
+            return False
+    
+        if self.reception_calendar[current_date_strformat]:
+            return False
+        
+        return True
