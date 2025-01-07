@@ -12,7 +12,7 @@ RUN mkdir -p /app/web/static/ && \
     pip install --upgrade pip && \
     pip install 'poetry>=1.4.2' && \
     poetry config virtualenvs.create false && \
-    poetry install --no-root --no-dev
+    poetry install --no-root
 
 COPY . .
 
